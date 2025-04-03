@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://o2jdyc81i6pm"]
+
+[ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j4pa8"]
+atlas = ExtResource("1_a2wf4")
+region = Rect2(0, 0, 1920, 1080)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dxil8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j4pa8")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Game" type="Node2D"]
+
+[node name="Table" type="Node2D" parent="."]
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Table"]
+sprite_frames = SubResource("SpriteFrames_dxil8")
+centered = false
