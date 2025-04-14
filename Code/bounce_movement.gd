@@ -1,4 +1,4 @@
-extends Sprite2D
+extends RigidBody2D
 
 var velocity = Vector2.ZERO
 var speed = 200
@@ -7,20 +7,12 @@ var rigid_body
 
 func _ready():
 	# Initialize random direction
-	var angle = randf_range(0, 2 * PI)
+	var angle = PI # randf_range(0, 2 * PI)
 	velocity = Vector2(cos(angle), sin(angle)) * speed
-	rigid_body = $RigidPhysics
+	linear_velocity = velocity
 
 func _physics_process(delta):
-	# Move the node
-	position += velocity * delta
-
-	# Check for collisions with bounds and bounce
-	if position.x < bounds.position.x or position.x > bounds.position.x + bounds.size.x:
-		velocity.x = - velocity.x
-		position.x = clamp(position.x, bounds.position.x, bounds.position.x + bounds.size.x)
-	if position.y < bounds.position.y or position.y > bounds.position.y + bounds.size.y:
-		velocity.y = - velocity.y
-		position.y = clamp(position.y, bounds.position.y, bounds.position.y + bounds.size.y)
-	rigid_body.linear_velocity.x = velocity.x
-	rigid_body.linear_velocity.y = velocity.y
+	# Move and collide with walls if needed
+	var collision_info = move_and_collide(velocity * delta)
+	if collision_info:
+		velocity = velocity.bounce(collision_info.get_normal())
