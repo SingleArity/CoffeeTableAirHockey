@@ -56,25 +56,27 @@ z_index = 1
 material = SubResource("CanvasItemMaterial_eaksn")
 texture = ExtResource("2_sbewx")
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
+[node name="Table" type="Node2D" parent="."]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+[node name="StaticBody2D" type="StaticBody2D" parent="Table"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(955, 4.5)
 shape = SubResource("RectangleShape2D_tuca0")
 
-[node name="Sprite" type="AnimatedSprite2D" parent="StaticBody2D"]
+[node name="Sprite" type="AnimatedSprite2D" parent="Table/StaticBody2D"]
 show_behind_parent = true
 sprite_frames = SubResource("SpriteFrames_dxil8")
 centered = false
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(930, 1063)
 shape = SubResource("RectangleShape2D_tuca0")
 
-[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(1892, 542)
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Table/StaticBody2D"]
+position = Vector2(1940, 542)
 shape = SubResource("RectangleShape2D_denrl")
 
-[node name="CollisionShape2D4" type="CollisionShape2D" parent="StaticBody2D"]
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(-28.5, 529)
 shape = SubResource("RectangleShape2D_denrl")
