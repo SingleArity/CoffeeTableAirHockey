@@ -1,7 +1,8 @@
-[gd_scene load_steps=9 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=11 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Code/bounce_movement.gd" id="2_73mmo"]
+[ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -9,6 +10,8 @@ bounce = 1.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uh7by"]
 radius = 50.0
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_eaksn"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tuca0"]
 size = Vector2(1842, 61)
@@ -34,39 +37,44 @@ size = Vector2(113, 1010)
 [node name="Game" type="Node2D"]
 
 [node name="Puck" type="Node2D" parent="."]
+z_index = 1
+position = Vector2(500, 500)
+script = ExtResource("2_73mmo")
 
 [node name="RigidPhysics" type="RigidBody2D" parent="Puck"]
-position = Vector2(574, 498)
 collision_mask = 7
 physics_material_override = SubResource("PhysicsMaterial_b48tr")
 gravity_scale = 0.0
 contact_monitor = true
 max_contacts_reported = 3
-script = ExtResource("2_73mmo")
 
 [node name="Collision" type="CollisionShape2D" parent="Puck/RigidPhysics"]
 shape = SubResource("CircleShape2D_uh7by")
 
-[node name="Table" type="Node2D" parent="."]
+[node name="PuckSprite" type="Sprite2D" parent="Puck/RigidPhysics"]
+z_index = 1
+material = SubResource("CanvasItemMaterial_eaksn")
+texture = ExtResource("2_sbewx")
 
-[node name="StaticBody2D" type="StaticBody2D" parent="Table"]
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Table/StaticBody2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2(955, 4.5)
 shape = SubResource("RectangleShape2D_tuca0")
 
-[node name="Sprite" type="AnimatedSprite2D" parent="Table/StaticBody2D"]
+[node name="Sprite" type="AnimatedSprite2D" parent="StaticBody2D"]
+show_behind_parent = true
 sprite_frames = SubResource("SpriteFrames_dxil8")
 centered = false
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBody2D"]
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2(930, 1063)
 shape = SubResource("RectangleShape2D_tuca0")
 
-[node name="CollisionShape2D3" type="CollisionShape2D" parent="Table/StaticBody2D"]
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2(1892, 542)
 shape = SubResource("RectangleShape2D_denrl")
 
-[node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2(-28.5, 529)
 shape = SubResource("RectangleShape2D_denrl")
