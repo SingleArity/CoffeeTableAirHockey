@@ -1,8 +1,9 @@
-[gd_scene load_steps=11 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=14 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
-[ext_resource type="Script" path="res://Code/bounce_movement.gd" id="2_73mmo"]
+[ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="2_73mmo"]
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
+[ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -33,6 +34,20 @@ animations = [{
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_denrl"]
 size = Vector2(113, 1010)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_iesco"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_sbewx")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xndx3"]
+radius = 50.0
 
 [node name="Game" type="Node2D"]
 
@@ -70,7 +85,7 @@ sprite_frames = SubResource("SpriteFrames_dxil8")
 centered = false
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(930, 1063)
+position = Vector2(955, 1063)
 shape = SubResource("RectangleShape2D_tuca0")
 
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="Table/StaticBody2D"]
@@ -80,3 +95,13 @@ shape = SubResource("RectangleShape2D_denrl")
 [node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(-28.5, 529)
 shape = SubResource("RectangleShape2D_denrl")
+
+[node name="Mallet_P1" type="AnimatableBody2D" parent="."]
+position = Vector2(182, 163)
+script = ExtResource("4_ru7yk")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
+sprite_frames = SubResource("SpriteFrames_iesco")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P1"]
+shape = SubResource("CircleShape2D_xndx3")
