@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://Scripts/game_script.gd" id="1_r0ebw"]
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
 [ext_resource type="Script" path="res://Scripts/table.gd" id="4_0umfb"]
+[ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -46,6 +47,20 @@ size = Vector2(130, 450)
 font_size = 100
 outline_size = 13
 outline_color = Color(0.0295066, 0.0295066, 0.0295066, 1)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_iesco"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_sbewx")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xndx3"]
+radius = 50.0
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_r0ebw")
@@ -92,6 +107,7 @@ shape = SubResource("RectangleShape2D_tuca0")
 position = Vector2(1940, 542)
 shape = SubResource("RectangleShape2D_denrl")
 
+
 [node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(-28.5, 529)
 shape = SubResource("RectangleShape2D_denrl")
@@ -116,3 +132,14 @@ offset_bottom = 217.0
 text = "READY"
 label_settings = SubResource("LabelSettings_0wjtg")
 horizontal_alignment = 1
+
+[node name="
+" type="AnimatableBody2D" parent="."]
+position = Vector2(182, 163)
+script = ExtResource("4_ru7yk")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
+sprite_frames = SubResource("SpriteFrames_iesco")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P1"]
+shape = SubResource("CircleShape2D_xndx3")

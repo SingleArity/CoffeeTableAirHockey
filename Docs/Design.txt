@@ -1,0 +1,31 @@
+Components
+
+Table (+goal areas)
+Puck
+P1 Mallet
+P2 Mallet
+
+
+Controls
+
+Player Can Move w/ joystick, free movement, sping imparted with lateral motion from movement vector
+
+Button 1 - hold to activate "powering up" mode, release to launch mallet
+
+Button 2 - hold for to parry/block mode
+
+
+Behavior
+
+States
+Powering up 
+	- player moves slower
+Launching 
+	- player has no control
+Post-launch cooldown 
+	- player is slow? can the player power up another shot in this state?
+Normal movement mode - 
+	stationary - puck just gets deflected at same speed its already moving
+	moving - it gets pushed at speed player mallet is moving
+Blocking 
+	- puck's movement gets slowed 

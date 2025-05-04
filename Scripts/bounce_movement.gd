@@ -3,12 +3,13 @@ extends Node2D
 var velocity = Vector2.ZERO
 var speed = 200
 var bounds = Rect2(Vector2(0, 0), Vector2(800, 600)) # Example edge limits (adjust as needed)
-var rigid_body
+var rigid_body 
 
 func _ready():
 	rigid_body = $RigidPhysics
 	# Initialize random direction
 	SignalBus.lock_player.connect(_on_lock_player)
+
 
 func _physics_process(delta):
 	# Move and collide with walls if needed
@@ -33,3 +34,4 @@ func _on_lock_player(locked):
 		_reset() # Reset position
 	else:
 		_start() # Start moving again
+
