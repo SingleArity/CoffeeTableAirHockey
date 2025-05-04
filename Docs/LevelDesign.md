@@ -16,6 +16,6 @@ TODO
 
 ## Scoring
 
-A player gains a point if the puck enters the goal zone on the opposite side of the level.Once someone scores, the level is reset
+A player gains a point if the puck enters the goal zone on the opposite side of the level. Once someone scores, the level is reset
 
 The first person to 7 points wins.
