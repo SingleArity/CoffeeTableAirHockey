@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=19 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -107,7 +107,6 @@ shape = SubResource("RectangleShape2D_tuca0")
 position = Vector2(1940, 542)
 shape = SubResource("RectangleShape2D_denrl")
 
-
 [node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(-28.5, 529)
 shape = SubResource("RectangleShape2D_denrl")
@@ -133,8 +132,7 @@ text = "READY"
 label_settings = SubResource("LabelSettings_0wjtg")
 horizontal_alignment = 1
 
-[node name="
-" type="AnimatableBody2D" parent="."]
+[node name="Mallet_P1" type="AnimatableBody2D" parent="."]
 position = Vector2(182, 163)
 script = ExtResource("4_ru7yk")
 

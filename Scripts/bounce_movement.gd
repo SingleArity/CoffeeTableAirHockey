@@ -34,4 +34,3 @@ func _on_lock_player(locked):
 		_reset() # Reset position
 	else:
 		_start() # Start moving again
-
