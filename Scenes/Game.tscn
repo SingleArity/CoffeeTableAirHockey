@@ -1,8 +1,10 @@
-[gd_scene load_steps=14 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=19 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
-[ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="2_73mmo"]
+[ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
+[ext_resource type="Script" path="res://Scripts/game_script.gd" id="1_r0ebw"]
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
+[ext_resource type="Script" path="res://Scripts/table.gd" id="4_0umfb"]
 [ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
@@ -35,6 +37,17 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_denrl"]
 size = Vector2(113, 1010)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cwyxm"]
+size = Vector2(130, 450)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yri5s"]
+size = Vector2(130, 450)
+
+[sub_resource type="LabelSettings" id="LabelSettings_0wjtg"]
+font_size = 100
+outline_size = 13
+outline_color = Color(0.0295066, 0.0295066, 0.0295066, 1)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_iesco"]
 animations = [{
 "frames": [{
@@ -50,11 +63,12 @@ animations = [{
 radius = 50.0
 
 [node name="Game" type="Node2D"]
+script = ExtResource("1_r0ebw")
 
 [node name="Puck" type="Node2D" parent="."]
 z_index = 1
 position = Vector2(500, 500)
-script = ExtResource("2_73mmo")
+script = ExtResource("1_qv72c")
 
 [node name="RigidPhysics" type="RigidBody2D" parent="Puck"]
 collision_mask = 7
@@ -72,6 +86,7 @@ material = SubResource("CanvasItemMaterial_eaksn")
 texture = ExtResource("2_sbewx")
 
 [node name="Table" type="Node2D" parent="."]
+script = ExtResource("4_0umfb")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Table"]
 
@@ -85,7 +100,7 @@ sprite_frames = SubResource("SpriteFrames_dxil8")
 centered = false
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(955, 1063)
+position = Vector2(930, 1063)
 shape = SubResource("RectangleShape2D_tuca0")
 
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="Table/StaticBody2D"]
@@ -95,6 +110,27 @@ shape = SubResource("RectangleShape2D_denrl")
 [node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
 position = Vector2(-28.5, 529)
 shape = SubResource("RectangleShape2D_denrl")
+
+[node name="Goal1" type="Area2D" parent="Table"]
+position = Vector2(0, 530)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Table/Goal1"]
+shape = SubResource("RectangleShape2D_cwyxm")
+
+[node name="Goal2" type="Area2D" parent="Table"]
+position = Vector2(1900, 530)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Table/Goal2"]
+shape = SubResource("RectangleShape2D_yri5s")
+
+[node name="Display" type="Label" parent="."]
+offset_left = 351.0
+offset_top = 77.0
+offset_right = 1566.0
+offset_bottom = 217.0
+text = "READY"
+label_settings = SubResource("LabelSettings_0wjtg")
+horizontal_alignment = 1
 
 [node name="Mallet_P1" type="AnimatableBody2D" parent="."]
 position = Vector2(182, 163)
