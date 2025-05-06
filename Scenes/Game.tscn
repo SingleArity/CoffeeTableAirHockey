@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=20 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
 [ext_resource type="Script" path="res://Scripts/table.gd" id="4_0umfb"]
 [ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
+[ext_resource type="PackedScene" uid="uid://crka4338hy8ln" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -135,9 +136,20 @@ horizontal_alignment = 1
 [node name="Mallet_P1" type="AnimatableBody2D" parent="."]
 position = Vector2(182, 163)
 script = ExtResource("4_ru7yk")
+chevron_scene = ExtResource("7_f6tdj")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
 sprite_frames = SubResource("SpriteFrames_iesco")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P1"]
 shape = SubResource("CircleShape2D_xndx3")
+
+[node name="Chevrons" type="Node2D" parent="Mallet_P1"]
+
+[node name="PowerTimer" type="Timer" parent="Mallet_P1"]
+
+[node name="CooldownTimer" type="Timer" parent="Mallet_P1"]
+wait_time = 2.0
+
+[connection signal="timeout" from="Mallet_P1/PowerTimer" to="Mallet_P1" method="_on_power_timer_timeout"]
+[connection signal="timeout" from="Mallet_P1/CooldownTimer" to="Mallet_P1" method="_on_cooldown_timer_timeout"]
