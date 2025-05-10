@@ -15,7 +15,9 @@ var player1_score = 0
 var player2_score = 0
 
 # UI elements (assuming these will be assigned in the inspector)
-@onready var display_label = $Display
+@onready var main_label = $Display/Main
+@onready var player1_score_label = $Display/ScoreP1
+@onready var player2_score_label = $Display/ScoreP2
 
 func _ready():
 	# Initialize the game in READY state
@@ -36,21 +38,25 @@ func change_state(new_state):
 			lock_player_input()
 			
 			# Display READY text
-			display_label.text = "READY"
-			display_label.visible = true
+			main_label.text = "READY"
+			main_label.visible = true
 			
+			# Timer to hide GO text
+			var timer = get_tree().create_timer(1.0)
+			await timer.timeout
+
 		GameState.PLAY:
 			# Unlock player input
 			unlock_player_input()
 
 			# Show GO text briefly
-			display_label.text = "GO!"
-			display_label.visible = true
+			main_label.text = "GO!"
+			main_label.visible = true
 			
 			# Timer to hide GO text
 			var timer = get_tree().create_timer(1.0)
 			await timer.timeout
-			display_label.visible = false
+			main_label.visible = false
 			
 		GameState.WIN:
 			# Lock player input
@@ -58,8 +64,8 @@ func change_state(new_state):
 			
 			# Determine winner and display
 			var winner_text = "Player 1 Wins!" if player1_score >= 7 else "Player 2 Wins!"
-			display_label.text = winner_text
-			display_label.visible = true
+			main_label.text = winner_text
+			main_label.visible = true
 
 # Signal handlers
 func _on_start_play():
@@ -71,8 +77,10 @@ func _on_score_updated(player_id):
 		# Update score for the player who scored
 		if player_id == 1:
 			player1_score += 1
+			player1_score_label.text = str(player1_score)
 		else:
 			player2_score += 1
+			player2_score_label.text = str(player2_score)
 			
 		# Check if someone won
 		if player1_score >= 7 or player2_score >= 7:
