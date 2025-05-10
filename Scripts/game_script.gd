@@ -32,6 +32,8 @@ func _ready():
 func change_state(new_state):
 	current_state = new_state
 	
+	player1_score_label.text = str(player1_score)
+	player2_score_label.text = str(player2_score)
 	match current_state:
 		GameState.READY:
 			# Lock player input
@@ -55,7 +57,7 @@ func change_state(new_state):
 			
 			# Timer to hide GO text
 			var timer = get_tree().create_timer(1.0)
-			await timer.timeout
+			await timer.timeout # TODO: Be able to cancel this timer if needed
 			main_label.visible = false
 			
 		GameState.WIN:
@@ -71,16 +73,17 @@ func change_state(new_state):
 func _on_start_play():
 	if current_state == GameState.READY:
 		change_state(GameState.PLAY)
+	if current_state == GameState.WIN:
+		# Reset scores and change to READY state
+		reset_game()
 
 func _on_score_updated(player_id):
 	if current_state == GameState.PLAY:
 		# Update score for the player who scored
 		if player_id == 1:
 			player1_score += 1
-			player1_score_label.text = str(player1_score)
 		else:
 			player2_score += 1
-			player2_score_label.text = str(player2_score)
 			
 		# Check if someone won
 		if player1_score >= 7 or player2_score >= 7:
