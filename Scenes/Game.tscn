@@ -173,6 +173,7 @@ horizontal_alignment = 1
 position = Vector2(182, 163)
 script = ExtResource("4_ru7yk")
 chevron_scene = ExtResource("7_f6tdj")
+max_x = 960
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
 sprite_frames = SubResource("SpriteFrames_iesco")
@@ -183,9 +184,34 @@ shape = SubResource("CircleShape2D_xndx3")
 [node name="Chevrons" type="Node2D" parent="Mallet_P1"]
 
 [node name="PowerTimer" type="Timer" parent="Mallet_P1"]
+wait_time = 0.5
 
 [node name="CooldownTimer" type="Timer" parent="Mallet_P1"]
 wait_time = 2.0
 
+[node name="Mallet_P2" type="AnimatableBody2D" parent="."]
+position = Vector2(1477, 531)
+script = ExtResource("4_ru7yk")
+chevron_scene = ExtResource("7_f6tdj")
+min_x = 960
+max_x = 1920
+player = 1
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P2"]
+sprite_frames = SubResource("SpriteFrames_iesco")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P2"]
+shape = SubResource("CircleShape2D_xndx3")
+
+[node name="Chevrons" type="Node2D" parent="Mallet_P2"]
+
+[node name="PowerTimer" type="Timer" parent="Mallet_P2"]
+wait_time = 0.5
+
+[node name="CooldownTimer" type="Timer" parent="Mallet_P2"]
+wait_time = 2.0
+
 [connection signal="timeout" from="Mallet_P1/PowerTimer" to="Mallet_P1" method="_on_power_timer_timeout"]
 [connection signal="timeout" from="Mallet_P1/CooldownTimer" to="Mallet_P1" method="_on_cooldown_timer_timeout"]
+[connection signal="timeout" from="Mallet_P2/PowerTimer" to="Mallet_P2" method="_on_power_timer_timeout"]
+[connection signal="timeout" from="Mallet_P2/CooldownTimer" to="Mallet_P2" method="_on_cooldown_timer_timeout"]

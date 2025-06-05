@@ -1,5 +1,7 @@
 extends Node2D
 
+const MAX_VELOCITY = 100
+
 var velocity = Vector2.ZERO
 var speed = 200
 var bounds = Rect2(Vector2(0, 0), Vector2(800, 600)) # Example edge limits (adjust as needed)
@@ -17,6 +19,9 @@ func _physics_process(delta):
 	if collision_info:
 		velocity = velocity.bounce(collision_info.get_normal())
 
+func _integrate_forces(state):
+	state.linear_velocity = state.linear_velocity.limit_length(MAX_VELOCITY)
+	
 func _start():
 	# Reset position and velocity when the game starts
 	var angle = PI # randf_range(0, 2 * PI)
