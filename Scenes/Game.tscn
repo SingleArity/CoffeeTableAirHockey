@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=23 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
 [ext_resource type="Script" path="res://Scripts/table.gd" id="4_0umfb"]
 [ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
-[ext_resource type="PackedScene" uid="uid://crka4338hy8ln" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
+[ext_resource type="PackedScene" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -48,6 +48,19 @@ size = Vector2(130, 450)
 font_size = 100
 outline_size = 13
 outline_color = Color(0.0295066, 0.0295066, 0.0295066, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_1aun1"]
+line_spacing = 50.0
+font_size = 100
+
+[sub_resource type="LabelSettings" id="LabelSettings_hii56"]
+line_spacing = 0.0
+font_size = 100
+
+[sub_resource type="LabelSettings" id="LabelSettings_henyj"]
+font_size = 100
+outline_size = 13
+outline_color = Color(0, 0, 0, 1)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_iesco"]
 animations = [{
@@ -129,8 +142,31 @@ offset_left = 351.0
 offset_top = 77.0
 offset_right = 1566.0
 offset_bottom = 217.0
-text = "READY"
 label_settings = SubResource("LabelSettings_0wjtg")
+horizontal_alignment = 1
+
+[node name="ScoreP2" type="Label" parent="Display"]
+layout_mode = 0
+offset_left = 1000.0
+offset_right = 1300.0
+offset_bottom = 150.0
+text = "0"
+label_settings = SubResource("LabelSettings_1aun1")
+horizontal_alignment = 2
+
+[node name="ScoreP1" type="Label" parent="Display"]
+layout_mode = 0
+offset_right = 300.0
+offset_bottom = 150.0
+text = "0"
+label_settings = SubResource("LabelSettings_hii56")
+
+[node name="Main" type="Label" parent="Display"]
+layout_mode = 0
+offset_right = 1215.0
+offset_bottom = 140.0
+text = "READY"
+label_settings = SubResource("LabelSettings_henyj")
 horizontal_alignment = 1
 
 [node name="Mallet_P1" type="AnimatableBody2D" parent="."]
