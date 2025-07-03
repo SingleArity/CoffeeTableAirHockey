@@ -1,10 +1,15 @@
 extends Node2D
 
+@onready var game = get_node("/root/Game")
+
+const GameState = preload("res://Scripts/game_state.gd")
+
 const MOVE_SPEED_NORMAL = 8
 const MOVE_SPEED_POWER = 3
 const MAX_POWER_LVL = 5
 
 @export var chevron_scene: PackedScene
+@export var blocker_scene: PackedScene
 
 @export var min_x: int
 @export var max_x: int
@@ -15,6 +20,9 @@ var can_control = true
 var move_vertical = Input.get_joy_axis(0, JOY_AXIS_LEFT_X)
 var move_horizontal = Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)
 
+var block_active: bool = false
+var blocker
+
 var current_move_speed = 8
 
 var power_is_held
@@ -24,20 +32,31 @@ var spin
 var kb_input = true
 
 var current_input_map
-#currently arrays, should be dicts, so we can just reference input by name
+#currently arrays, should be dicts? so we can just reference input by name
 var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block"]
+var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block"]
 var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2"]
+var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2"]
+
+var power_times = [.1,.3,.5,.8,1.0,1.2]
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	SignalBus.lock_player.connect(_on_lock_player_input)
 	if(player == 0):
-		current_input_map = input_map_p1
+		if(game.computer_mode):
+			current_input_map = input_map_p1_comp_mode
+		else:
+			current_input_map = input_map_p1
 	elif(player == 1):
-		current_input_map = input_map_p2
+		if(game.computer_mode):
+			current_input_map = input_map_p2_comp_mode
+		else:
+			current_input_map = input_map_p2
 
 func _input(event: InputEvent) -> void:
-	print(event.device)
+	pass
+	#print(event.device)
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -55,8 +74,20 @@ func _process(delta: float) -> void:
 		current_move_speed = MOVE_SPEED_POWER
 	else:
 		current_move_speed = MOVE_SPEED_NORMAL
+	
+	if(Input.is_action_pressed(current_input_map[5])):
+		if(!block_active):
+			block_active = true
+			blocker = blocker_scene.instantiate()
+			add_child(blocker)
+	else:
+		if(block_active && Input.is_action_just_released(current_input_map[5])):
+			block_active = false
+			blocker.queue_free()
 		
+	
 	if(Input.is_action_just_pressed(current_input_map[4])):
+		$PowerTimer.wait_time = power_times[power_lvl]
 		$PowerTimer.start()
 	
 	if(Input.is_action_just_released(current_input_map[4])):
@@ -69,14 +100,19 @@ func _process(delta: float) -> void:
 				chev.queue_free()
 		$PowerTimer.stop()
 		power_lvl = 0
+	
+
 		
 	#print("x: ", move_vertical)
 	#print("y: ", move_horizontal)
 	
 func _physics_process(delta: float) -> void:
-
 	var move_amt = Vector2(move_horizontal * -1, move_vertical) * current_move_speed
 	var oob = outside_move_boundaries(move_amt)
+	
+	#don't process player movement if not in "play" state
+	if(game.current_state != GameState.PLAY):
+		return
 	if(!oob):
 		#actually move if not out of bounds
 		global_position += Vector2(move_horizontal * -1, move_vertical) * current_move_speed
@@ -102,6 +138,7 @@ func _on_power_timer_timeout() -> void:
 		$Chevrons.add_child(chev)
 		chev.offset.x = 80 + (40 * power_lvl)
 		power_lvl += 1
+		$PowerTimer.wait_time = power_times[power_lvl]
 
 func _on_cooldown_timer_timeout() -> void:
 	can_control = true

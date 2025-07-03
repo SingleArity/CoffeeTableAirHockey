@@ -1,11 +1,14 @@
 extends Node
 
+@export var computer_mode: bool
+
 # States in the game state machine
-enum GameState {
-	READY,
-	PLAY,
-	WIN
-}
+#enum GameState {
+	#READY,
+	#PLAY,
+	#WIN
+#}
+const GameState = preload("res://Scripts/game_state.gd")
 
 # Current state of the game
 var current_state = GameState.READY
@@ -18,6 +21,9 @@ var player2_score = 0
 @onready var main_label = $Display/Main
 @onready var player1_score_label = $Display/ScoreP1
 @onready var player2_score_label = $Display/ScoreP2
+
+@onready var p1 = $Mallet_P1
+@onready var p2 = $Mallet_P2
 
 func _ready():
 	# Initialize the game in READY state
@@ -38,6 +44,12 @@ func change_state(new_state):
 		GameState.READY:
 			# Lock player input
 			lock_player_input()
+			
+			# Reset player positions and zero input
+			p1.position = Vector2(170,540)
+			p1.current_move_speed = 0
+			p2.position = Vector2(1750,540)
+			p2.current_move_speed = 0
 			
 			# Display READY text
 			main_label.text = "READY"

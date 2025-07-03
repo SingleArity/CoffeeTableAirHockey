@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=24 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -6,7 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
 [ext_resource type="Script" path="res://Scripts/table.gd" id="4_0umfb"]
 [ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
-[ext_resource type="PackedScene" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
+[ext_resource type="PackedScene" uid="uid://crka4338hy8ln" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
+[ext_resource type="PackedScene" uid="uid://do7q6urpwl06e" path="res://Scenes/blocker.tscn" id="8_k2qgw"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -78,13 +79,14 @@ radius = 50.0
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_r0ebw")
+computer_mode = true
 
-[node name="Puck" type="Node2D" parent="."]
+[node name="Puck" type="Node2D" parent="." groups=["puck"]]
 z_index = 1
 position = Vector2(500, 500)
 script = ExtResource("1_qv72c")
 
-[node name="RigidPhysics" type="RigidBody2D" parent="Puck"]
+[node name="RigidPhysics" type="RigidBody2D" parent="Puck" groups=["puck"]]
 collision_mask = 7
 physics_material_override = SubResource("PhysicsMaterial_b48tr")
 gravity_scale = 0.0
@@ -95,6 +97,7 @@ max_contacts_reported = 3
 shape = SubResource("CircleShape2D_uh7by")
 
 [node name="PuckSprite" type="Sprite2D" parent="Puck/RigidPhysics"]
+modulate = Color(0.0962047, 0.0962048, 0.0962047, 1)
 z_index = 1
 material = SubResource("CanvasItemMaterial_eaksn")
 texture = ExtResource("2_sbewx")
@@ -170,10 +173,13 @@ label_settings = SubResource("LabelSettings_henyj")
 horizontal_alignment = 1
 
 [node name="Mallet_P1" type="AnimatableBody2D" parent="."]
-position = Vector2(182, 163)
+position = Vector2(170, 540)
 script = ExtResource("4_ru7yk")
 chevron_scene = ExtResource("7_f6tdj")
+blocker_scene = ExtResource("8_k2qgw")
+min_x = null
 max_x = 960
+player = null
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
 sprite_frames = SubResource("SpriteFrames_iesco")
@@ -190,9 +196,10 @@ wait_time = 0.5
 wait_time = 2.0
 
 [node name="Mallet_P2" type="AnimatableBody2D" parent="."]
-position = Vector2(1477, 531)
+position = Vector2(1750, 531)
 script = ExtResource("4_ru7yk")
 chevron_scene = ExtResource("7_f6tdj")
+blocker_scene = ExtResource("8_k2qgw")
 min_x = 960
 max_x = 1920
 player = 1

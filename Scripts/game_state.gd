@@ -1,0 +1,5 @@
+enum {
+	READY,
+	PLAY,
+	WIN
+}
