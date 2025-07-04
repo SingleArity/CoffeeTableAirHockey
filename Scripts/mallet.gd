@@ -29,22 +29,24 @@ var power_is_held
 var power_pressed_dir: Vector2
 var dash_angle_degrees
 var power_lvl = 0
-var spin
+var spin_power
+const MAX_SPIN_POWER = 30
 
 var kb_input = true
 
 var current_input_map
 #currently arrays, should be dicts? so we can just reference input by name
-var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block"]
-var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block"]
-var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2"]
-var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2"]
+var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block","spin_p1"]
+var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block","spin_p1"]
+var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2","spin_p2"]
+var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2","spin_p2"]
 
 var power_times = [.1,.3,.5,.8,1.0,1.2]
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	SignalBus.lock_player.connect(_on_lock_player_input)
+	spin_power = 0
 	#set player-specific vars
 	if(player == 0):
 		if(game.computer_mode):
@@ -117,10 +119,34 @@ func _process(delta: float) -> void:
 		$PowerTimer.stop()
 		power_lvl = 0
 	
+	#spin pressed, power and block are not
+	if(Input.is_action_pressed(current_input_map[6]) &&
+		!Input.is_action_pressed(current_input_map[4]) && 
+		!Input.is_action_pressed(current_input_map[5])):
+		check_apply_spin()
+	
 
-		
-	#print("x: ", move_vertical)
-	#print("y: ", move_horizontal)
+func check_apply_spin():
+	var left = current_input_map[0]
+	var right = current_input_map[1]
+	if(player == 1):
+		left = current_input_map[1]
+		right = current_input_map[0]
+	if(game.computer_mode):
+		left = current_input_map[3]
+		right = current_input_map[2]
+	#right
+	if(Input.is_action_just_pressed(left)):
+		spin_power -= 2
+		#cap spin_power
+		spin_power = max(spin_power, MAX_SPIN_POWER * -1)
+		$SpinDischarge.start(1.0)
+	#p1 right
+	if(Input.is_action_just_pressed(right)):
+		spin_power += 2
+		#cap spin_power
+		spin_power = min(spin_power,MAX_SPIN_POWER)
+		$SpinDischarge.start(1.0)
 
 func adjust_dash_direction(angle):
 	var pressed_dir_angle = rad_to_deg(power_pressed_dir.angle())
@@ -139,6 +165,9 @@ func _physics_process(delta: float) -> void:
 	if(game.current_state != GameState.PLAY):
 		return
 	
+	if(spin_power != 0):
+		$AnimatedSprite2D.rotation_degrees += spin_power
+		
 	var move_vector = Vector2(move_horizontal * -1, move_vertical)
 	#var angle = move_vector.angle_to(Vector2(1,0))
 	
@@ -189,3 +218,13 @@ func _on_cooldown_timer_timeout() -> void:
 
 func _on_lock_player_input(locked: bool) -> void:
 	can_control = !locked
+
+func _on_spin_discharge_timeout() -> void:
+	#less spin each timeout
+	if(spin_power > 0):
+		spin_power -= 1
+	elif(spin_power < 0):
+		spin_power += 1
+	#if spin not fully dissipated, continue
+	if(spin_power != 0):
+		$SpinDischarge.start(1.0)
