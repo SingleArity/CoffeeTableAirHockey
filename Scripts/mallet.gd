@@ -26,6 +26,8 @@ var blocker
 var current_move_speed = 8
 
 var power_is_held
+var power_pressed_dir: Vector2
+var dash_angle_degrees
 var power_lvl = 0
 var spin
 
@@ -43,16 +45,21 @@ var power_times = [.1,.3,.5,.8,1.0,1.2]
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	SignalBus.lock_player.connect(_on_lock_player_input)
+	#set player-specific vars
 	if(player == 0):
 		if(game.computer_mode):
 			current_input_map = input_map_p1_comp_mode
 		else:
 			current_input_map = input_map_p1
+		power_pressed_dir = Vector2(1,0)
 	elif(player == 1):
 		if(game.computer_mode):
 			current_input_map = input_map_p2_comp_mode
 		else:
 			current_input_map = input_map_p2
+		power_pressed_dir = Vector2(-1,0)
+	#set initial dash angle
+	dash_angle_degrees = rad_to_deg(power_pressed_dir.angle())
 
 func _input(event: InputEvent) -> void:
 	pass
@@ -69,12 +76,14 @@ func _process(delta: float) -> void:
 		move_vertical = Input.get_axis(current_input_map[0],current_input_map[1])
 		move_horizontal = Input.get_axis(current_input_map[2],current_input_map[3])
 	
+	
 	power_is_held = Input.is_action_pressed(current_input_map[4])
 	if(power_is_held):
 		current_move_speed = MOVE_SPEED_POWER
 	else:
 		current_move_speed = MOVE_SPEED_NORMAL
 	
+	#turn on block
 	if(Input.is_action_pressed(current_input_map[5])):
 		if(!block_active):
 			block_active = true
@@ -85,11 +94,18 @@ func _process(delta: float) -> void:
 			block_active = false
 			blocker.queue_free()
 		
-	
+	#just pressed 'power' button
 	if(Input.is_action_just_pressed(current_input_map[4])):
 		$PowerTimer.wait_time = power_times[power_lvl]
 		$PowerTimer.start()
-	
+		power_pressed_dir = Vector2(move_horizontal * -1, move_vertical)
+		if(power_pressed_dir == Vector2(0,0)):
+			if(player == 0):
+				power_pressed_dir = Vector2(1,0)
+			if(player == 1):
+				power_pressed_dir = Vector2(-1,0)
+				
+	#just released power button
 	if(Input.is_action_just_released(current_input_map[4])):
 		if power_lvl > 0:
 			can_control = false
@@ -105,6 +121,15 @@ func _process(delta: float) -> void:
 		
 	#print("x: ", move_vertical)
 	#print("y: ", move_horizontal)
+
+func adjust_dash_direction(angle):
+	var pressed_dir_angle = rad_to_deg(power_pressed_dir.angle())
+	if(angle < 0.0):
+		pressed_dir_angle += 1
+	elif(angle > 0.0):
+		pressed_dir_angle -= 1
+	power_pressed_dir = Vector2.from_angle(deg_to_rad(pressed_dir_angle))
+	return pressed_dir_angle
 	
 func _physics_process(delta: float) -> void:
 	var move_amt = Vector2(move_horizontal * -1, move_vertical) * current_move_speed
@@ -113,18 +138,36 @@ func _physics_process(delta: float) -> void:
 	#don't process player movement if not in "play" state
 	if(game.current_state != GameState.PLAY):
 		return
-	if(!oob):
-		#actually move if not out of bounds
-		global_position += Vector2(move_horizontal * -1, move_vertical) * current_move_speed
-
+	
 	var move_vector = Vector2(move_horizontal * -1, move_vertical)
 	#var angle = move_vector.angle_to(Vector2(1,0))
-	var angle = rad_to_deg(move_vector.angle())
-	if (move_vector == Vector2(0, 0)):
-		angle = 0.0
-	#print(angle)
-	$Chevrons.rotation_degrees = angle
+	
+	if(can_control):
+		dash_angle_degrees = rad_to_deg(move_vector.angle())
+	else:
+		#currently dashing
+		var angle_from_initial_pow_dir = rad_to_deg(move_vector.angle_to(power_pressed_dir))
+		dash_angle_degrees = adjust_dash_direction(angle_from_initial_pow_dir)
+		
+	#if power button is held down, and we are not yet dashing
+	if(Input.is_action_pressed(current_input_map[4]) && can_control):
+		var angle_from_initial_pow_dir = rad_to_deg(move_vector.angle_to(power_pressed_dir))
+		dash_angle_degrees = adjust_dash_direction(angle_from_initial_pow_dir)
 
+	#print(angle)
+	$Chevrons.rotation_degrees = dash_angle_degrees
+
+	if(!oob):
+		#actually move if not out of bounds
+		if(!can_control):
+			#dash movement
+			global_position += Vector2.from_angle(deg_to_rad(dash_angle_degrees)) * current_move_speed
+			print("angle:", dash_angle_degrees)
+			print(Vector2.from_angle(deg_to_rad(dash_angle_degrees)))
+		else:
+			#regular movement
+			global_position += Vector2(move_horizontal * -1, move_vertical) * current_move_speed
+		
 func outside_move_boundaries(move_amount):
 	if((global_position + move_amount).x > max_x ||
 	(global_position + move_amount).x < min_x ||

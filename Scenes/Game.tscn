@@ -177,9 +177,7 @@ position = Vector2(170, 540)
 script = ExtResource("4_ru7yk")
 chevron_scene = ExtResource("7_f6tdj")
 blocker_scene = ExtResource("8_k2qgw")
-min_x = null
 max_x = 960
-player = null
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
 sprite_frames = SubResource("SpriteFrames_iesco")
