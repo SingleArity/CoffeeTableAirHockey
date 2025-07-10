@@ -25,6 +25,8 @@ var player2_score = 0
 @onready var p1 = $Mallet_P1
 @onready var p2 = $Mallet_P2
 
+var paused_control_player
+
 func _ready():
 	# Initialize the game in READY state
 	change_state(GameState.READY)
@@ -32,9 +34,11 @@ func _ready():
 	# Connect to the signal that triggers the start of play
 	SignalBus.start_play.connect(_on_start_play)
 	
+	SignalBus.pause.connect(on_pause_pressed)
+	
 	# Connect to the signal that indicates a score
 	SignalBus.score_updated.connect(_on_score_updated)
-
+	
 func change_state(new_state):
 	current_state = new_state
 	
@@ -89,6 +93,11 @@ func _on_start_play():
 		# Reset scores and change to READY state
 		reset_game()
 
+#currently just restarts game
+func on_pause_pressed(player_id):
+	paused_control_player = player_id
+	get_tree().reload_current_scene()
+	
 func _on_score_updated(player_id):
 	if current_state == GameState.PLAY:
 		# Update score for the player who scored

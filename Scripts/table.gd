@@ -1,5 +1,6 @@
 extends Node2D
 
+@onready var game = get_node("/root/Game")
 @onready var goal1_region = $Goal1
 @onready var goal2_region = $Goal2
 
@@ -12,12 +13,18 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	# Check if the space bar is pressed to start the game
-	if Input.is_action_just_pressed("ui_accept"):
+	# Check if either ready button is pressed to start the game
+	if (Input.is_action_just_pressed("ready_p1") or 
+	Input.is_action_just_pressed("ready_p2")):
 		# Emit signal to start the game
 		print("Starting game...")
 		SignalBus.emit_start_play()
-
+	
+	elif(Input.is_action_just_pressed("pause_p1")):
+		SignalBus.emit_pause(0)
+	elif(Input.is_action_just_pressed("pause_p2")):
+		SignalBus.emit_pause(1)
+		
 # Check if the object is a Puck
 func is_puck(body: Node) -> bool:
 	# Check if the body is a Puck
