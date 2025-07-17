@@ -24,13 +24,15 @@ var block_active: bool = false
 var blocker
 
 var current_move_speed = 8
+var spin_decay = 4
 
 var power_is_held
 var power_pressed_dir: Vector2
 var dash_angle_degrees
+var dash_adjust_speed = 4
 var power_lvl = 0
 var spin_power
-const MAX_SPIN_POWER = 30
+const MAX_SPIN_POWER = 27
 
 var kb_input = true
 
@@ -69,7 +71,7 @@ func _input(event: InputEvent) -> void:
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if (!can_control):
+	if (!can_control or game.dev_console_active):
 		return
 		
 	move_vertical = Input.get_joy_axis(0,JOY_AXIS_LEFT_X)
@@ -137,13 +139,13 @@ func check_apply_spin():
 		right = current_input_map[2]
 	#right
 	if(Input.is_action_just_pressed(left)):
-		spin_power -= 2
+		spin_power -= 8
 		#cap spin_power
 		spin_power = max(spin_power, MAX_SPIN_POWER * -1)
 		$SpinDischarge.start(1.0)
 	#p1 right
 	if(Input.is_action_just_pressed(right)):
-		spin_power += 2
+		spin_power += 8
 		#cap spin_power
 		spin_power = min(spin_power,MAX_SPIN_POWER)
 		$SpinDischarge.start(1.0)
@@ -151,9 +153,9 @@ func check_apply_spin():
 func adjust_dash_direction(angle):
 	var pressed_dir_angle = rad_to_deg(power_pressed_dir.angle())
 	if(angle < 0.0):
-		pressed_dir_angle += 1
+		pressed_dir_angle += dash_adjust_speed
 	elif(angle > 0.0):
-		pressed_dir_angle -= 1
+		pressed_dir_angle -= dash_adjust_speed
 	power_pressed_dir = Vector2.from_angle(deg_to_rad(pressed_dir_angle))
 	return pressed_dir_angle
 	
@@ -222,9 +224,14 @@ func _on_lock_player_input(locked: bool) -> void:
 func _on_spin_discharge_timeout() -> void:
 	#less spin each timeout
 	if(spin_power > 0):
-		spin_power -= 1
+		spin_power -= spin_decay
 	elif(spin_power < 0):
-		spin_power += 1
+		spin_power += spin_decay
 	#if spin not fully dissipated, continue
 	if(spin_power != 0):
 		$SpinDischarge.start(1.0)
+
+func set_spin_decay(val_string):
+	print("hi")
+	print(int(val_string))
+	spin_decay = int(val_string)

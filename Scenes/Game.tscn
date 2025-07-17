@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=26 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://crka4338hy8ln" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
 [ext_resource type="PackedScene" uid="uid://do7q6urpwl06e" path="res://Scenes/blocker.tscn" id="8_k2qgw"]
 [ext_resource type="Texture2D" uid="uid://beon3pd36g8vs" path="res://Sprites/mallet.png" id="9_xldi5"]
+[ext_resource type="Script" path="res://Scripts/dev_console.gd" id="10_mqsam"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -197,6 +198,7 @@ wait_time = 0.5
 wait_time = 2.0
 
 [node name="SpinDischarge" type="Timer" parent="Mallet_P1"]
+wait_time = 0.5
 
 [node name="Mallet_P2" type="AnimatableBody2D" parent="." groups=["mallet"]]
 position = Vector2(1750, 531)
@@ -223,9 +225,37 @@ wait_time = 2.0
 
 [node name="SpinDischarge" type="Timer" parent="Mallet_P2"]
 
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+
+[node name="DevConsole" type="VBoxContainer" parent="UI"]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -260.0
+offset_right = 734.0
+grow_vertical = 0
+script = ExtResource("10_mqsam")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="UI/DevConsole"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Line" type="LineEdit" parent="UI/DevConsole"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+max_length = 100
+caret_blink = true
+
 [connection signal="timeout" from="Puck/SpinDecay" to="Puck" method="_on_spin_decay_timeout"]
 [connection signal="timeout" from="Mallet_P1/PowerTimer" to="Mallet_P1" method="_on_power_timer_timeout"]
 [connection signal="timeout" from="Mallet_P1/CooldownTimer" to="Mallet_P1" method="_on_cooldown_timer_timeout"]
 [connection signal="timeout" from="Mallet_P1/SpinDischarge" to="Mallet_P1" method="_on_spin_discharge_timeout"]
 [connection signal="timeout" from="Mallet_P2/PowerTimer" to="Mallet_P2" method="_on_power_timer_timeout"]
 [connection signal="timeout" from="Mallet_P2/CooldownTimer" to="Mallet_P2" method="_on_cooldown_timer_timeout"]
+[connection signal="text_submitted" from="UI/DevConsole/Line" to="UI/DevConsole" method="_on_line_text_submitted"]

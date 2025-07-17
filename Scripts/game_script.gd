@@ -26,6 +26,7 @@ var player2_score = 0
 @onready var p2 = $Mallet_P2
 
 var paused_control_player
+var dev_console_active = false
 
 func _ready():
 	# Initialize the game in READY state
@@ -38,7 +39,18 @@ func _ready():
 	
 	# Connect to the signal that indicates a score
 	SignalBus.score_updated.connect(_on_score_updated)
-	
+
+func _process(delta: float) -> void:
+	if(Input.is_action_just_pressed("dev_console")):
+		if(!$UI/DevConsole.active):
+			$UI/DevConsole.visible = true
+			$UI/DevConsole.set_active(true)
+			dev_console_active = true
+		else:
+			$UI/DevConsole.visible = false
+			$UI/DevConsole.set_active(false)
+			dev_console_active = false
+
 func change_state(new_state):
 	current_state = new_state
 	

@@ -13,6 +13,8 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
+	if(game.dev_console_active):
+		return
 	# Check if either ready button is pressed to start the game
 	if (Input.is_action_just_pressed("ready_p1") or 
 	Input.is_action_just_pressed("ready_p2")):
