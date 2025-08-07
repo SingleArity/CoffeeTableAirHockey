@@ -84,7 +84,7 @@ script = ExtResource("1_r0ebw")
 
 [node name="Puck" type="Node2D" parent="." groups=["puck"]]
 z_index = 1
-position = Vector2(500, 500)
+position = Vector2(960, 540)
 script = ExtResource("1_qv72c")
 
 [node name="RigidPhysics" type="RigidBody2D" parent="Puck" groups=["puck"]]

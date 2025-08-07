@@ -1,0 +1,7 @@
+enum {
+	DOWN,
+	UP,
+	CHARGING,
+	PUSHING,
+	BLOCKING
+}

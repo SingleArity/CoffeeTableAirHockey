@@ -42,12 +42,12 @@ func apply_spin(spin_amt):
 	
 func _start():
 	# Reset position and velocity when the game starts
-	var angle = PI # randf_range(0, 2 * PI)
+	var angle = randf_range(0, 2 * PI) # PI
 	velocity = Vector2(cos(angle), sin(angle)) * speed
 	rigid_body.linear_velocity = velocity
 
 func _reset():
-	rigid_body.global_position = Vector2(700, 500) # Directly set the rigid body's position
+	rigid_body.global_position = Vector2(960, 540) # Directly set the rigid body's position
 	rigid_body.linear_velocity = Vector2.ZERO
 	velocity = Vector2.ZERO # Reset internal velocity tracking
 

@@ -3,10 +3,12 @@ extends Node2D
 @onready var game = get_node("/root/Game")
 
 const GameState = preload("res://Scripts/game_state.gd")
+const MalletState = preload("res://Scripts/mallet_state.gd")
 
-const MOVE_SPEED_NORMAL = 8
-const MOVE_SPEED_POWER = 3
-const MAX_POWER_LVL = 5
+var MOVE_SPEED_NORMAL = 8
+var MOVE_SPEED_POWER = 3
+var MOVE_SPEED_UP = 16
+var MAX_POWER_LVL = 5
 
 @export var chevron_scene: PackedScene
 @export var blocker_scene: PackedScene
@@ -16,6 +18,7 @@ const MAX_POWER_LVL = 5
 
 @export var player: int
 
+var state
 var can_control = true
 var move_vertical = Input.get_joy_axis(0, JOY_AXIS_LEFT_X)
 var move_horizontal = Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)
@@ -32,16 +35,16 @@ var dash_angle_degrees
 var dash_adjust_speed = 4
 var power_lvl = 0
 var spin_power
-const MAX_SPIN_POWER = 27
+var MAX_SPIN_POWER = 27
 
 var kb_input = true
 
 var current_input_map
 #currently arrays, should be dicts? so we can just reference input by name
-var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block","spin_p1"]
-var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block","spin_p1"]
-var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2","spin_p2"]
-var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2","spin_p2"]
+var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block","spin_p1","up_p1"]
+var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block","spin_p1","up_p1"]
+var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2","spin_p2","up_p2"]
+var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2","spin_p2","up_p2"]
 
 var power_times = [.1,.3,.5,.8,1.0,1.2]
 
@@ -64,7 +67,9 @@ func _ready() -> void:
 		power_pressed_dir = Vector2(-1,0)
 	#set initial dash angle
 	dash_angle_degrees = rad_to_deg(power_pressed_dir.angle())
-
+	#init state
+	state = MalletState.DOWN
+	
 func _input(event: InputEvent) -> void:
 	pass
 	#print(event.device)
@@ -85,21 +90,25 @@ func _process(delta: float) -> void:
 	if(power_is_held):
 		current_move_speed = MOVE_SPEED_POWER
 	else:
-		current_move_speed = MOVE_SPEED_NORMAL
+		if(state == MalletState.DOWN):
+			current_move_speed = MOVE_SPEED_NORMAL
 	
 	#turn on block
 	if(Input.is_action_pressed(current_input_map[5])):
-		if(!block_active):
+		if(!block_active and state == MalletState.DOWN):
+			state = MalletState.BLOCKING
 			block_active = true
 			blocker = blocker_scene.instantiate()
 			add_child(blocker)
 	else:
 		if(block_active && Input.is_action_just_released(current_input_map[5])):
 			block_active = false
+			state = MalletState.DOWN
 			blocker.queue_free()
 		
 	#just pressed 'power' button
-	if(Input.is_action_just_pressed(current_input_map[4])):
+	if(Input.is_action_just_pressed(current_input_map[4]) and state == MalletState.DOWN):
+		state = MalletState.CHARGING
 		$PowerTimer.wait_time = power_times[power_lvl]
 		$PowerTimer.start()
 		power_pressed_dir = Vector2(move_horizontal * -1, move_vertical)
@@ -109,9 +118,10 @@ func _process(delta: float) -> void:
 			if(player == 1):
 				power_pressed_dir = Vector2(-1,0)
 				
-	#just released power button
+	#just released power button while charging
 	if(Input.is_action_just_released(current_input_map[4])):
 		if power_lvl > 0:
+			state = MalletState.PUSHING
 			can_control = false
 			$CooldownTimer.wait_time = .3
 			$CooldownTimer.start()
@@ -124,9 +134,18 @@ func _process(delta: float) -> void:
 	#spin pressed, power and block are not
 	if(Input.is_action_pressed(current_input_map[6]) &&
 		!Input.is_action_pressed(current_input_map[4]) && 
-		!Input.is_action_pressed(current_input_map[5])):
+		!Input.is_action_pressed(current_input_map[5]) &&
+		!Input.is_action_pressed(current_input_map[7])):
 		check_apply_spin()
 	
+	if(Input.is_action_just_pressed(current_input_map[7]) and state == MalletState.DOWN):
+		state = MalletState.UP
+		current_move_speed = MOVE_SPEED_UP
+		lift_up()
+		
+	if(Input.is_action_just_released(current_input_map[7]) and state == MalletState.UP):
+		drop_down()
+		
 
 func check_apply_spin():
 	var left = current_input_map[0]
@@ -158,6 +177,23 @@ func adjust_dash_direction(angle):
 		pressed_dir_angle -= dash_adjust_speed
 	power_pressed_dir = Vector2.from_angle(deg_to_rad(pressed_dir_angle))
 	return pressed_dir_angle
+
+func lift_up():
+	var tween = get_tree().create_tween()
+	tween.tween_property($AnimatedSprite2D, "scale", Vector2(1.5,1.5), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	var tween2 = get_tree().create_tween()
+	tween2.tween_property($AnimatedSprite2D, "modulate", Color(1.0,1.0,1.0,.5), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	$CollisionShape2D.disabled = true
+	
+func drop_down():
+	var tween = get_tree().create_tween()
+	tween.tween_property($AnimatedSprite2D, "scale", Vector2(1.0,1.0), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	var tween2 = get_tree().create_tween()
+	tween2.tween_property($AnimatedSprite2D, "modulate", Color(1.0,1.0,1.0,1.0), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	await get_tree().create_timer(.2).timeout
+	$CollisionShape2D.disabled = false
+	state = MalletState.DOWN
+	current_move_speed = MOVE_SPEED_NORMAL
 	
 func _physics_process(delta: float) -> void:
 	var move_amt = Vector2(move_horizontal * -1, move_vertical) * current_move_speed
@@ -217,7 +253,8 @@ func _on_power_timer_timeout() -> void:
 func _on_cooldown_timer_timeout() -> void:
 	can_control = true
 	$CooldownTimer.stop()
-
+	state = MalletState.DOWN
+	
 func _on_lock_player_input(locked: bool) -> void:
 	can_control = !locked
 
