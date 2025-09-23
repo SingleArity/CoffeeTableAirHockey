@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=32 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -6,10 +6,13 @@
 [ext_resource type="Texture2D" uid="uid://c0ex6v8ar78vd" path="res://Sprites/puck.bmp" id="2_sbewx"]
 [ext_resource type="Script" path="res://Scripts/table.gd" id="4_0umfb"]
 [ext_resource type="Script" path="res://Scripts/mallet.gd" id="4_ru7yk"]
+[ext_resource type="PhysicsMaterial" uid="uid://pwin3m4qeeq4" path="res://Materials/PhysicsMaterials/mallet_phys_mat.tres" id="6_x2xp0"]
 [ext_resource type="PackedScene" uid="uid://crka4338hy8ln" path="res://Scenes/chevron.tscn" id="7_f6tdj"]
 [ext_resource type="PackedScene" uid="uid://do7q6urpwl06e" path="res://Scenes/blocker.tscn" id="8_k2qgw"]
 [ext_resource type="Texture2D" uid="uid://beon3pd36g8vs" path="res://Sprites/mallet.png" id="9_xldi5"]
+[ext_resource type="Shader" path="res://Shaders/jitter.gdshader" id="10_ls6y7"]
 [ext_resource type="Script" path="res://Scripts/dev_console.gd" id="10_mqsam"]
+[ext_resource type="Texture2D" uid="uid://c5m0ag2b50mkb" path="res://Sprites/Ring4.png" id="11_aqj2p"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -21,7 +24,7 @@ radius = 50.0
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_eaksn"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tuca0"]
-size = Vector2(1842, 61)
+size = Vector2(1923, 61)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j4pa8"]
 atlas = ExtResource("1_a2wf4")
@@ -39,13 +42,13 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_denrl"]
-size = Vector2(113, 1010)
+size = Vector2(270, 264)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cwyxm"]
-size = Vector2(130, 450)
+size = Vector2(130, 559)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yri5s"]
-size = Vector2(130, 450)
+size = Vector2(130, 466)
 
 [sub_resource type="LabelSettings" id="LabelSettings_0wjtg"]
 font_size = 100
@@ -76,16 +79,40 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xh1p3"]
+shader = ExtResource("10_ls6y7")
+shader_parameter/shaking = true
+shader_parameter/amplitude = 3.0
+shader_parameter/noise_scale = 30.0
+shader_parameter/noise_speed = 8.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mnhgx"]
+atlas = ExtResource("11_aqj2p")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_3ubvh"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mnhgx")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_xndx3"]
 radius = 50.0
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_r0ebw")
+computer_mode = true
 
 [node name="Puck" type="Node2D" parent="." groups=["puck"]]
 z_index = 1
 position = Vector2(960, 540)
 script = ExtResource("1_qv72c")
+has_impact_delay = true
 
 [node name="RigidPhysics" type="RigidBody2D" parent="Puck" groups=["puck"]]
 collision_mask = 7
@@ -121,27 +148,37 @@ sprite_frames = SubResource("SpriteFrames_dxil8")
 centered = false
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(930, 1063)
+position = Vector2(941.5, 1063)
 shape = SubResource("RectangleShape2D_tuca0")
 
-[node name="CollisionShape2D3" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(1940, 542)
+[node name="RightWall" type="CollisionShape2D" parent="Table/StaticBody2D"]
+position = Vector2(2018, 896)
 shape = SubResource("RectangleShape2D_denrl")
 
-[node name="CollisionShape2D4" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(-28.5, 529)
+[node name="RightWall2" type="CollisionShape2D" parent="Table/StaticBody2D"]
+position = Vector2(2020, 157)
+shape = SubResource("RectangleShape2D_denrl")
+
+[node name="LeftWall" type="CollisionShape2D" parent="Table/StaticBody2D"]
+position = Vector2(-103, 116)
+shape = SubResource("RectangleShape2D_denrl")
+
+[node name="LeftWall2" type="CollisionShape2D" parent="Table/StaticBody2D"]
+position = Vector2(-105, 931)
 shape = SubResource("RectangleShape2D_denrl")
 
 [node name="Goal1" type="Area2D" parent="Table"]
-position = Vector2(0, 530)
+position = Vector2(-31, 538)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Table/Goal1"]
+position = Vector2(-48, -12.5)
 shape = SubResource("RectangleShape2D_cwyxm")
 
 [node name="Goal2" type="Area2D" parent="Table"]
 position = Vector2(1900, 530)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Table/Goal2"]
+position = Vector2(98, -3)
 shape = SubResource("RectangleShape2D_yri5s")
 
 [node name="Display" type="Label" parent="."]
@@ -178,13 +215,20 @@ horizontal_alignment = 1
 
 [node name="Mallet_P1" type="AnimatableBody2D" parent="." groups=["mallet"]]
 position = Vector2(170, 540)
+physics_material_override = ExtResource("6_x2xp0")
 script = ExtResource("4_ru7yk")
 chevron_scene = ExtResource("7_f6tdj")
 blocker_scene = ExtResource("8_k2qgw")
 max_x = 960
+block_mode = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
 sprite_frames = SubResource("SpriteFrames_iesco")
+
+[node name="Ring" type="AnimatedSprite2D" parent="Mallet_P1"]
+visible = false
+material = SubResource("ShaderMaterial_xh1p3")
+sprite_frames = SubResource("SpriteFrames_3ubvh")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P1"]
 shape = SubResource("CircleShape2D_xndx3")
@@ -202,6 +246,7 @@ wait_time = 0.5
 
 [node name="Mallet_P2" type="AnimatableBody2D" parent="." groups=["mallet"]]
 position = Vector2(1750, 531)
+physics_material_override = ExtResource("6_x2xp0")
 script = ExtResource("4_ru7yk")
 chevron_scene = ExtResource("7_f6tdj")
 blocker_scene = ExtResource("8_k2qgw")

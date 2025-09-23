@@ -1,13 +1,14 @@
-extends Node2D
+extends AnimatableBody2D
 
 @onready var game = get_node("/root/Game")
 
 const GameState = preload("res://Scripts/game_state.gd")
 const MalletState = preload("res://Scripts/mallet_state.gd")
+#const BlockMode = preload("res://Scripts/block_mode.gd")
 
 var MOVE_SPEED_NORMAL = 8
 var MOVE_SPEED_POWER = 3
-var MOVE_SPEED_UP = 16
+var MOVE_SPEED_UP = 40
 var MAX_POWER_LVL = 5
 
 @export var chevron_scene: PackedScene
@@ -18,10 +19,13 @@ var MAX_POWER_LVL = 5
 
 @export var player: int
 
+@export var block_mode: BlockMode.BLOCK_MODE
+
 var state
 var can_control = true
 var move_vertical = Input.get_joy_axis(0, JOY_AXIS_LEFT_X)
 var move_horizontal = Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)
+var movement_paused = false
 
 var block_active: bool = false
 var blocker
@@ -30,6 +34,12 @@ var current_move_speed = 8
 var spin_decay = 4
 
 var power_is_held
+var power_held_frames = 0
+
+var consecutive_countdown = false
+var consecutive_power_taps = 0
+var consecutive_power_tap_frames = 20
+
 var power_pressed_dir: Vector2
 var dash_angle_degrees
 var dash_adjust_speed = 4
@@ -76,7 +86,13 @@ func _input(event: InputEvent) -> void:
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if (!can_control or game.dev_console_active):
+	if(Input.is_action_just_released(current_input_map[4])):
+		if(state == MalletState.UP):
+			# if we are ghost-dashing, interrupt normal cooldown
+			_on_cooldown_timer_timeout()
+	
+	#otherwise no input taken while !can_control
+	if (!can_control or movement_paused or game.dev_console_active):
 		return
 		
 	move_vertical = Input.get_joy_axis(0,JOY_AXIS_LEFT_X)
@@ -85,41 +101,73 @@ func _process(delta: float) -> void:
 		move_vertical = Input.get_axis(current_input_map[0],current_input_map[1])
 		move_horizontal = Input.get_axis(current_input_map[2],current_input_map[3])
 	
-	
+	#holding power button
 	power_is_held = Input.is_action_pressed(current_input_map[4])
 	if(power_is_held):
-		current_move_speed = MOVE_SPEED_POWER
+		power_held_frames += 1
+		if(power_held_frames == 30):
+			start_power_charging()
 	else:
 		if(state == MalletState.DOWN):
 			current_move_speed = MOVE_SPEED_NORMAL
 	
-	#turn on block
-	if(Input.is_action_pressed(current_input_map[5])):
-		if(!block_active and state == MalletState.DOWN):
-			state = MalletState.BLOCKING
-			block_active = true
-			blocker = blocker_scene.instantiate()
-			add_child(blocker)
+	#checking consecutive power taps
+	
+	#block button is held
+	if(Input.is_action_pressed(current_input_map[5]) && !Input.is_action_pressed(current_input_map[4])):
+		if(block_mode == BlockMode.BLOCK_MODE.SLOW):
+			handle_block_slow()
+		elif(block_mode == BlockMode.BLOCK_MODE.BUNT):
+			handle_block_bunt()
+		elif(block_mode == BlockMode.BLOCK_MODE.ORBIT):
+			handle_block_orbit()
 	else:
-		if(block_active && Input.is_action_just_released(current_input_map[5])):
-			block_active = false
-			state = MalletState.DOWN
-			blocker.queue_free()
+		if(block_mode == BlockMode.BLOCK_MODE.SLOW):
+			release_block_slow()
+		elif(block_mode == BlockMode.BLOCK_MODE.BUNT):
+			release_block_bunt()
+		elif(block_mode == BlockMode.BLOCK_MODE.ORBIT):
+			release_block_orbit()
+		
 		
 	#just pressed 'power' button
-	if(Input.is_action_just_pressed(current_input_map[4]) and state == MalletState.DOWN):
-		state = MalletState.CHARGING
-		$PowerTimer.wait_time = power_times[power_lvl]
-		$PowerTimer.start()
-		power_pressed_dir = Vector2(move_horizontal * -1, move_vertical)
-		if(power_pressed_dir == Vector2(0,0)):
-			if(player == 0):
-				power_pressed_dir = Vector2(1,0)
-			if(player == 1):
-				power_pressed_dir = Vector2(-1,0)
+	if(Input.is_action_just_pressed(current_input_map[4]) && state == MalletState.DOWN):
+		if(consecutive_power_tap_frames == 20):
+			consecutive_countdown = true
+			consecutive_power_taps = 1
+		elif(consecutive_power_tap_frames > 0):
+			consecutive_power_taps += 1
+			if(consecutive_power_taps == 2):
+				#print("ghost-dash!")
+				ghost_dash()
+				#reset taps check
+				consecutive_power_taps = 0
+				consecutive_countdown = false
+				consecutive_power_tap_frames = 20
+				
+	
+	if(consecutive_countdown):
+		#print(consecutive_power_tap_frames)
+		consecutive_power_tap_frames -= 1
+		if(consecutive_power_tap_frames == 0):
+			#time out, reset taps check
+			consecutive_power_taps = 0
+			consecutive_countdown = false
+			consecutive_power_tap_frames = 20
+			
+		#state = MalletState.CHARGING
+		#$PowerTimer.wait_time = power_times[power_lvl]
+		#$PowerTimer.start()
+		#power_pressed_dir = Vector2(move_horizontal * -1, move_vertical)
+		#if(power_pressed_dir == Vector2(0,0)):
+			#if(player == 0):
+				#power_pressed_dir = Vector2(1,0)
+			#if(player == 1):
+				#power_pressed_dir = Vector2(-1,0)
 				
 	#just released power button while charging
 	if(Input.is_action_just_released(current_input_map[4])):
+		power_held_frames = 0
 		if power_lvl > 0:
 			state = MalletState.PUSHING
 			can_control = false
@@ -131,22 +179,92 @@ func _process(delta: float) -> void:
 		$PowerTimer.stop()
 		power_lvl = 0
 	
-	#spin pressed, power and block are not
+	#spin pressed, power and raiseup are not
 	if(Input.is_action_pressed(current_input_map[6]) &&
 		!Input.is_action_pressed(current_input_map[4]) && 
-		!Input.is_action_pressed(current_input_map[5]) &&
 		!Input.is_action_pressed(current_input_map[7])):
+		move_vertical = 0.0
+		move_horizontal = 0.0
 		check_apply_spin()
 	
-	if(Input.is_action_just_pressed(current_input_map[7]) and state == MalletState.DOWN):
-		state = MalletState.UP
-		current_move_speed = MOVE_SPEED_UP
-		lift_up()
-		
-	if(Input.is_action_just_released(current_input_map[7]) and state == MalletState.UP):
-		drop_down()
+	#'ghost mode'
+	#if(Input.is_action_just_pressed(current_input_map[7]) and state == MalletState.DOWN):
+		#state = MalletState.UP
+		#current_move_speed = MOVE_SPEED_UP
+		#lift_up()
+		#
+	#if(Input.is_action_just_released(current_input_map[7]) and state == MalletState.UP):
+		#drop_down()
 		
 
+func start_power_charging():
+	#no more double-tap check
+	consecutive_power_tap_frames = 20
+	consecutive_power_taps = 0
+	consecutive_countdown = false
+	#start charging up
+	state = MalletState.CHARGING
+	current_move_speed = MOVE_SPEED_POWER
+	#pretend the charging timer timed out once immediately
+	_on_power_timer_timeout()
+	#$PowerTimer.wait_time = power_times[power_lvl]
+	$PowerTimer.start()
+	power_pressed_dir = Vector2(move_horizontal * -1, move_vertical)
+	if(power_pressed_dir == Vector2(0,0)):
+		if(player == 0):
+			power_pressed_dir = Vector2(1,0)
+		if(player == 1):
+			power_pressed_dir = Vector2(-1,0)
+
+func ghost_dash():
+	var move_vector = Vector2(move_horizontal * -1, move_vertical)
+	dash_angle_degrees = rad_to_deg(move_vector.angle())
+	#print("ghost dash angle:", dash_angle_degrees)
+	state = MalletState.UP
+	current_move_speed = MOVE_SPEED_UP
+	can_control = false
+	$CooldownTimer.wait_time = .3
+	$CooldownTimer.start()
+	lift_up()
+
+#every frame, if block button held, and charge not
+func handle_block_slow():
+	if(!block_active and state == MalletState.DOWN):
+		state = MalletState.BLOCKING_SLOW
+		block_active = true
+		blocker = blocker_scene.instantiate()
+		add_child(blocker)
+	
+#every frame, if block button held, and charge not
+func handle_block_bunt():
+	if(!block_active and state == MalletState.DOWN):
+		state = MalletState.BLOCKING_BUNT
+		block_active = true
+		$Ring.visible = true
+		physics_material_override.absorbent = true
+
+func check_bunt():
+	return state == MalletState.BLOCKING_BUNT
+	
+func handle_block_orbit():
+	pass
+
+func release_block_slow():
+	if(block_active && Input.is_action_just_released(current_input_map[5])):
+		block_active = false
+		state = MalletState.DOWN
+		blocker.queue_free()
+	
+func release_block_bunt():
+	if(block_active && Input.is_action_just_released(current_input_map[5])):
+		block_active = false
+		state = MalletState.DOWN
+		$Ring.visible = false
+		physics_material_override.absorbent = false
+	
+func release_block_orbit():
+	pass
+	
 func check_apply_spin():
 	var left = current_input_map[0]
 	var right = current_input_map[1]
@@ -180,22 +298,24 @@ func adjust_dash_direction(angle):
 
 func lift_up():
 	var tween = get_tree().create_tween()
-	tween.tween_property($AnimatedSprite2D, "scale", Vector2(1.5,1.5), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	tween.tween_property($AnimatedSprite2D, "scale", Vector2(1.5,1.5), .1).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
 	var tween2 = get_tree().create_tween()
-	tween2.tween_property($AnimatedSprite2D, "modulate", Color(1.0,1.0,1.0,.5), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	tween2.tween_property($AnimatedSprite2D, "modulate", Color(1.0,1.0,1.0,.5), .1).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
 	$CollisionShape2D.disabled = true
 	
 func drop_down():
 	var tween = get_tree().create_tween()
-	tween.tween_property($AnimatedSprite2D, "scale", Vector2(1.0,1.0), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	tween.tween_property($AnimatedSprite2D, "scale", Vector2(1.0,1.0), .1).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
 	var tween2 = get_tree().create_tween()
-	tween2.tween_property($AnimatedSprite2D, "modulate", Color(1.0,1.0,1.0,1.0), .2).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
-	await get_tree().create_timer(.2).timeout
+	tween2.tween_property($AnimatedSprite2D, "modulate", Color(1.0,1.0,1.0,1.0), .1).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN)
+	await get_tree().create_timer(.1).timeout
 	$CollisionShape2D.disabled = false
-	state = MalletState.DOWN
-	current_move_speed = MOVE_SPEED_NORMAL
+	
+	#current_move_speed = MOVE_SPEED_NORMAL
 	
 func _physics_process(delta: float) -> void:
+	if(movement_paused):
+		return
 	var move_amt = Vector2(move_horizontal * -1, move_vertical) * current_move_speed
 	var oob = outside_move_boundaries(move_amt)
 	
@@ -212,9 +332,10 @@ func _physics_process(delta: float) -> void:
 	if(can_control):
 		dash_angle_degrees = rad_to_deg(move_vector.angle())
 	else:
-		#currently dashing
-		var angle_from_initial_pow_dir = rad_to_deg(move_vector.angle_to(power_pressed_dir))
-		dash_angle_degrees = adjust_dash_direction(angle_from_initial_pow_dir)
+		#if currently attack dashing
+		if(state == MalletState.PUSHING):
+			var angle_from_initial_pow_dir = rad_to_deg(move_vector.angle_to(power_pressed_dir))
+			dash_angle_degrees = adjust_dash_direction(angle_from_initial_pow_dir)
 		
 	#if power button is held down, and we are not yet dashing
 	if(Input.is_action_pressed(current_input_map[4]) && can_control):
@@ -229,8 +350,8 @@ func _physics_process(delta: float) -> void:
 		if(!can_control):
 			#dash movement
 			global_position += Vector2.from_angle(deg_to_rad(dash_angle_degrees)) * current_move_speed
-			print("angle:", dash_angle_degrees)
-			print(Vector2.from_angle(deg_to_rad(dash_angle_degrees)))
+			#print("angle:", dash_angle_degrees)
+			#print(Vector2.from_angle(deg_to_rad(dash_angle_degrees)))
 		else:
 			#regular movement
 			global_position += Vector2(move_horizontal * -1, move_vertical) * current_move_speed
@@ -250,9 +371,18 @@ func _on_power_timer_timeout() -> void:
 		power_lvl += 1
 		$PowerTimer.wait_time = power_times[power_lvl]
 
+#mostly used by the 'impact delay' func in puck script
+func pause_cooldown_timer(state) -> void:
+	if($CooldownTimer.time_left > 0.0):
+		$CooldownTimer.paused = state
+	
+# power charge attack finished
 func _on_cooldown_timer_timeout() -> void:
 	can_control = true
+	current_move_speed = MOVE_SPEED_NORMAL
 	$CooldownTimer.stop()
+	if(state == MalletState.UP):
+		drop_down()
 	state = MalletState.DOWN
 	
 func _on_lock_player_input(locked: bool) -> void:

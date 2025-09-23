@@ -1,6 +1,9 @@
 extends Node
+const GameState = preload("res://Scripts/game_state.gd")
+
 
 @export var computer_mode: bool
+@export var goals_disabled: bool
 
 # States in the game state machine
 #enum GameState {
@@ -8,7 +11,7 @@ extends Node
 	#PLAY,
 	#WIN
 #}
-const GameState = preload("res://Scripts/game_state.gd")
+
 
 # Current state of the game
 var current_state = GameState.READY
@@ -29,6 +32,8 @@ var paused_control_player
 var dev_console_active = false
 
 func _ready():
+	if(goals_disabled):
+		set_goals_enabled(false)
 	# Initialize the game in READY state
 	change_state(GameState.READY)
 	
@@ -137,3 +142,7 @@ func reset_game():
 	player1_score = 0
 	player2_score = 0
 	change_state(GameState.READY)
+	
+func set_goals_enabled(state):
+	$Table/Goal1/CollisionShape2D.disabled = !state
+	$Table/Goal2/CollisionShape2D.disabled = !state
