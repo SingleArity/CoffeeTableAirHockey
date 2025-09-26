@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=45 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -13,6 +13,12 @@
 [ext_resource type="Shader" path="res://Shaders/jitter.gdshader" id="10_ls6y7"]
 [ext_resource type="Script" path="res://Scripts/dev_console.gd" id="10_mqsam"]
 [ext_resource type="Texture2D" uid="uid://c5m0ag2b50mkb" path="res://Sprites/Ring4.png" id="11_aqj2p"]
+[ext_resource type="Texture2D" uid="uid://c7vjm7r7cuiek" path="res://Sprites/Spin_Blue_1.png" id="13_rrdgs"]
+[ext_resource type="Texture2D" uid="uid://wksvipixn2a4" path="res://Sprites/Spin_Blue_2.png" id="14_rhatk"]
+[ext_resource type="Texture2D" uid="uid://hnsus8jquku3" path="res://Sprites/Spin_Blue_3.png" id="15_741mh"]
+[ext_resource type="Texture2D" uid="uid://bk18x4ec62ah" path="res://Sprites/Spin_Red_1.png" id="16_kghlh"]
+[ext_resource type="Texture2D" uid="uid://qsvhfgswkew" path="res://Sprites/Spin_Red_2.png" id="17_ptckb"]
+[ext_resource type="Texture2D" uid="uid://4q7qsui5etrq" path="res://Sprites/Spin_Red_3.png" id="18_s3s8k"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_b48tr"]
 friction = 0.0
@@ -101,12 +107,94 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_ey2yp"]
+atlas = ExtResource("13_rrdgs")
+region = Rect2(0, 0, 160, 160)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_77du7"]
+atlas = ExtResource("14_rhatk")
+region = Rect2(0, 0, 160, 160)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8joe2"]
+atlas = ExtResource("15_741mh")
+region = Rect2(0, 0, 160, 160)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pptcs"]
+atlas = ExtResource("16_kghlh")
+region = Rect2(0, 0, 160, 160)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d52y4"]
+atlas = ExtResource("17_ptckb")
+region = Rect2(0, 0, 160, 160)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4a6xc"]
+atlas = ExtResource("18_s3s8k")
+region = Rect2(0, 0, 160, 160)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_b5eqw"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": null
+}],
+"loop": true,
+"name": &"0",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ey2yp")
+}],
+"loop": true,
+"name": &"left_1",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_77du7")
+}],
+"loop": true,
+"name": &"left_2",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8joe2")
+}],
+"loop": true,
+"name": &"left_3",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pptcs")
+}],
+"loop": true,
+"name": &"right_1",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d52y4")
+}],
+"loop": true,
+"name": &"right_2",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4a6xc")
+}],
+"loop": true,
+"name": &"right_3",
+"speed": 5.0
+}]
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_xndx3"]
 radius = 50.0
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_r0ebw")
-computer_mode = true
 
 [node name="Puck" type="Node2D" parent="." groups=["puck"]]
 z_index = 1
@@ -230,6 +318,10 @@ visible = false
 material = SubResource("ShaderMaterial_xh1p3")
 sprite_frames = SubResource("SpriteFrames_3ubvh")
 
+[node name="Spin" type="AnimatedSprite2D" parent="Mallet_P1"]
+sprite_frames = SubResource("SpriteFrames_b5eqw")
+animation = &"0"
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P1"]
 shape = SubResource("CircleShape2D_xndx3")
 
@@ -253,9 +345,19 @@ blocker_scene = ExtResource("8_k2qgw")
 min_x = 960
 max_x = 1920
 player = 1
+block_mode = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P2"]
 sprite_frames = SubResource("SpriteFrames_iesco")
+
+[node name="Ring" type="AnimatedSprite2D" parent="Mallet_P2"]
+visible = false
+material = SubResource("ShaderMaterial_xh1p3")
+sprite_frames = SubResource("SpriteFrames_3ubvh")
+
+[node name="Spin" type="AnimatedSprite2D" parent="Mallet_P2"]
+sprite_frames = SubResource("SpriteFrames_b5eqw")
+animation = &"0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Mallet_P2"]
 shape = SubResource("CircleShape2D_xndx3")

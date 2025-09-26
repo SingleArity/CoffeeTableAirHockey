@@ -51,12 +51,12 @@ var kb_input = true
 
 var current_input_map
 #currently arrays, should be dicts? so we can just reference input by name
-var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block","spin_p1","up_p1"]
-var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block","spin_p1","up_p1"]
-var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2","spin_p2","up_p2"]
-var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2","spin_p2","up_p2"]
+var input_map_p1 = ["move_left","move_right","move_forward","move_back","power","block","spin_left_p1","spin_right_p1","up_p1"]
+var input_map_p1_comp_mode = ["move_forward","move_back","move_right","move_left","power","block","spin_left_p1","spin_right_p1","up_p1"]
+var input_map_p2 = ["move_right_p2","move_left_p2","move_back_p2","move_forward_p2","power_p2","block_p2","spin_left_p2","spin_right_p2","up_p2"]
+var input_map_p2_comp_mode = ["move_forward_p2","move_back_p2","move_right_p2","move_left_p2","power_p2","block_p2","spin_left_p2","spin_right_p2","up_p2"]
 
-var power_times = [.1,.3,.5,.8,1.0,1.2]
+var power_times = [.1,.2,.3,.5,.7,.9]
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -105,7 +105,7 @@ func _process(delta: float) -> void:
 	power_is_held = Input.is_action_pressed(current_input_map[4])
 	if(power_is_held):
 		power_held_frames += 1
-		if(power_held_frames == 30):
+		if(power_held_frames == 20):
 			start_power_charging()
 	else:
 		if(state == MalletState.DOWN):
@@ -180,12 +180,12 @@ func _process(delta: float) -> void:
 		power_lvl = 0
 	
 	#spin pressed, power and raiseup are not
-	if(Input.is_action_pressed(current_input_map[6]) &&
-		!Input.is_action_pressed(current_input_map[4]) && 
-		!Input.is_action_pressed(current_input_map[7])):
-		move_vertical = 0.0
-		move_horizontal = 0.0
-		check_apply_spin()
+	#if(Input.is_action_pressed(current_input_map[6]) &&
+		#!Input.is_action_pressed(current_input_map[4]) && 
+		#!Input.is_action_pressed(current_input_map[7])):
+		#move_vertical = 0.0
+		#move_horizontal = 0.0
+	check_apply_spin()
 	
 	#'ghost mode'
 	#if(Input.is_action_just_pressed(current_input_map[7]) and state == MalletState.DOWN):
@@ -266,23 +266,43 @@ func release_block_orbit():
 	pass
 	
 func check_apply_spin():
-	var left = current_input_map[0]
-	var right = current_input_map[1]
+	var left = current_input_map[6]
+	var right = current_input_map[7]
 	if(player == 1):
-		left = current_input_map[1]
-		right = current_input_map[0]
+		left = current_input_map[6]
+		right = current_input_map[7]
 	if(game.computer_mode):
-		left = current_input_map[3]
-		right = current_input_map[2]
+		left = current_input_map[6]
+		right = current_input_map[7]
 	#right
 	if(Input.is_action_just_pressed(left)):
-		spin_power -= 8
+		if(spin_power > 0):
+			spin_power -= 8
+			spin_power = max(spin_power,0)
+		elif(spin_power > -16):
+			spin_power = -16
+		elif(spin_power > -22):
+			spin_power = -22
+		else:
+			spin_power = -MAX_SPIN_POWER
+		update_spin_ui()
 		#cap spin_power
 		spin_power = max(spin_power, MAX_SPIN_POWER * -1)
 		$SpinDischarge.start(1.0)
 	#p1 right
 	if(Input.is_action_just_pressed(right)):
-		spin_power += 8
+		#currently hard coded here, would like to have it based on a curve/map somehow
+		#curves don't seem to have necessary range
+		if(spin_power < 0):
+			spin_power += 8
+			spin_power = min(spin_power,0)
+		elif(spin_power < 16):
+			spin_power = 16
+		elif(spin_power < 22):
+			spin_power = 22
+		else:
+			spin_power = MAX_SPIN_POWER
+		update_spin_ui()
 		#cap spin_power
 		spin_power = min(spin_power,MAX_SPIN_POWER)
 		$SpinDischarge.start(1.0)
@@ -392,8 +412,13 @@ func _on_spin_discharge_timeout() -> void:
 	#less spin each timeout
 	if(spin_power > 0):
 		spin_power -= spin_decay
+		#clamp at 0 if we go under
+		spin_power = max(spin_power,0)
 	elif(spin_power < 0):
 		spin_power += spin_decay
+		#clamp at 0 if we go over
+		spin_power = min(spin_power,0)
+	update_spin_ui()
 	#if spin not fully dissipated, continue
 	if(spin_power != 0):
 		$SpinDischarge.start(1.0)
@@ -402,3 +427,19 @@ func set_spin_decay(val_string):
 	print("hi")
 	print(int(val_string))
 	spin_decay = int(val_string)
+
+func update_spin_ui():
+	if(spin_power < -22):
+		$Spin.animation = "left_3"
+	elif(spin_power < -16 && spin_power >= -22):
+		$Spin.animation = "left_2"
+	elif(spin_power < -1 && spin_power >= -16):
+		$Spin.animation = "left_1"
+	elif(spin_power >= -1 && spin_power <= 1):
+		$Spin.animation = "0"
+	elif(spin_power > 1 && spin_power <= 16):
+		$Spin.animation = "right_1"
+	elif(spin_power > 16 && spin_power <= 22):
+		$Spin.animation = "right_2"
+	elif(spin_power > 22):
+		$Spin.animation = "right_3"

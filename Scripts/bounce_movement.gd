@@ -8,6 +8,8 @@ var speed = 200
 var movement_paused = false
 @export var has_impact_delay: bool
 var impact_delay_cooldown = false
+#flag to be set on collision so we don't check more than once
+var impact_check = false
 
 var bounds = Rect2(Vector2(0, 0), Vector2(800, 600)) # Example edge limits (adjust as needed)
 var rigid_body 
@@ -52,6 +54,9 @@ func _integrate_forces(state):
 	print(state.linear_velocity)
 
 func impact_delay(mallet, wait_time):
+	impact_check = true
+	await get_tree().create_timer(.1).timeout
+	impact_check = false
 	#mallet
 	var mallet_vel = mallet.current_move_speed
 	mallet.current_move_speed = 0
@@ -60,6 +65,7 @@ func impact_delay(mallet, wait_time):
 	#puck
 	var puck_vel = rigid_body.linear_velocity
 	movement_paused = true
+	print("stored puck vel:", puck_vel)
 	rigid_body.linear_velocity = Vector2(0.0,0.0)
 	await get_tree().create_timer(wait_time).timeout
 	#reset puck
