@@ -34,8 +34,8 @@ func _physics_process(delta):
 		var coll_obj = collision_info.get_collider()
 		#hit a player mallet
 		if(coll_obj.is_in_group("mallet")):
-			if(has_impact_delay && coll_obj.current_move_speed >= 15 && !impact_delay_cooldown):
-				impact_delay(coll_obj, .5)
+			if(has_impact_delay && coll_obj.current_move_speed >= 15 && !impact_check):
+				impact_delay(coll_obj, 1.0)
 			if(coll_obj.check_bunt()):
 				velocity *= .4
 			apply_spin(coll_obj.spin_power)
@@ -55,8 +55,7 @@ func _integrate_forces(state):
 
 func impact_delay(mallet, wait_time):
 	impact_check = true
-	await get_tree().create_timer(.1).timeout
-	impact_check = false
+	
 	#mallet
 	var mallet_vel = mallet.current_move_speed
 	mallet.current_move_speed = 0
@@ -67,6 +66,7 @@ func impact_delay(mallet, wait_time):
 	movement_paused = true
 	print("stored puck vel:", puck_vel)
 	rigid_body.linear_velocity = Vector2(0.0,0.0)
+	print("hi")
 	await get_tree().create_timer(wait_time).timeout
 	#reset puck
 	movement_paused = false
@@ -76,10 +76,10 @@ func impact_delay(mallet, wait_time):
 	mallet.movement_paused = false
 	mallet.current_move_speed = mallet_vel
 	
-	#no more for a small time
-	impact_delay_cooldown = true
-	await get_tree().create_timer(.2).timeout
-	impact_delay_cooldown = false
+	#no more impact for a small time
+	#impact_delay_cooldown = true
+	await get_tree().create_timer(.5).timeout
+	impact_check = false
 	
 func apply_spin(spin_amt):
 	spin_push = spin_amt

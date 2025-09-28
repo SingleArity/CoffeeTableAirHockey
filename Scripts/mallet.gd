@@ -6,6 +6,12 @@ const GameState = preload("res://Scripts/game_state.gd")
 const MalletState = preload("res://Scripts/mallet_state.gd")
 #const BlockMode = preload("res://Scripts/block_mode.gd")
 
+enum ControlMode {
+	NORMAL_CONTROL,
+	BULLET_TIME
+}
+var control_mode = ControlMode.NORMAL_CONTROL
+
 var MOVE_SPEED_NORMAL = 8
 var MOVE_SPEED_POWER = 3
 var MOVE_SPEED_UP = 40
@@ -86,7 +92,7 @@ func _input(event: InputEvent) -> void:
 	
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if(Input.is_action_just_released(current_input_map[4])):
+	if(Input.is_action_just_released(current_input_map[8])):
 		if(state == MalletState.UP):
 			# if we are ghost-dashing, interrupt normal cooldown
 			_on_cooldown_timer_timeout()
@@ -94,7 +100,13 @@ func _process(delta: float) -> void:
 	#otherwise no input taken while !can_control
 	if (!can_control or movement_paused or game.dev_console_active):
 		return
-		
+	
+	if(control_mode == ControlMode.NORMAL_CONTROL):
+		handle_controls_normal()
+	elif(control_mode == ControlMode.BULLET_TIME):
+		handle_controls_bullet_time()
+
+func handle_controls_normal():
 	move_vertical = Input.get_joy_axis(0,JOY_AXIS_LEFT_X)
 	move_horizontal = Input.get_joy_axis(0,JOY_AXIS_LEFT_Y)
 	if(kb_input):
@@ -105,16 +117,16 @@ func _process(delta: float) -> void:
 	power_is_held = Input.is_action_pressed(current_input_map[4])
 	if(power_is_held):
 		power_held_frames += 1
-		if(power_held_frames == 20):
+		if(power_held_frames == 1):
 			start_power_charging()
 	else:
 		if(state == MalletState.DOWN):
 			current_move_speed = MOVE_SPEED_NORMAL
-	
-	#checking consecutive power taps
-	
-	#block button is held
-	if(Input.is_action_pressed(current_input_map[5]) && !Input.is_action_pressed(current_input_map[4])):
+
+	#block button is held, and no others
+	if(Input.is_action_pressed(current_input_map[5]) && 
+	!Input.is_action_pressed(current_input_map[4]) &&
+	!Input.is_action_pressed(current_input_map[8])):
 		if(block_mode == BlockMode.BLOCK_MODE.SLOW):
 			handle_block_slow()
 		elif(block_mode == BlockMode.BLOCK_MODE.BUNT):
@@ -128,42 +140,31 @@ func _process(delta: float) -> void:
 			release_block_bunt()
 		elif(block_mode == BlockMode.BLOCK_MODE.ORBIT):
 			release_block_orbit()
-		
-		
+			
 	#just pressed 'power' button
-	if(Input.is_action_just_pressed(current_input_map[4]) && state == MalletState.DOWN):
-		if(consecutive_power_tap_frames == 20):
-			consecutive_countdown = true
-			consecutive_power_taps = 1
-		elif(consecutive_power_tap_frames > 0):
-			consecutive_power_taps += 1
-			if(consecutive_power_taps == 2):
+	if(Input.is_action_just_pressed(current_input_map[8]) && state == MalletState.DOWN):
+		#if(consecutive_power_tap_frames == 20):
+			#consecutive_countdown = true
+			#consecutive_power_taps = 1
+		#elif(consecutive_power_tap_frames > 0):
+			#consecutive_power_taps += 1
+			#if(consecutive_power_taps == 2):
 				#print("ghost-dash!")
-				ghost_dash()
+		ghost_dash()
 				#reset taps check
-				consecutive_power_taps = 0
-				consecutive_countdown = false
-				consecutive_power_tap_frames = 20
+				#consecutive_power_taps = 0
+				#consecutive_countdown = false
+				#consecutive_power_tap_frames = 20
 				
 	
-	if(consecutive_countdown):
-		#print(consecutive_power_tap_frames)
-		consecutive_power_tap_frames -= 1
-		if(consecutive_power_tap_frames == 0):
-			#time out, reset taps check
-			consecutive_power_taps = 0
-			consecutive_countdown = false
-			consecutive_power_tap_frames = 20
-			
-		#state = MalletState.CHARGING
-		#$PowerTimer.wait_time = power_times[power_lvl]
-		#$PowerTimer.start()
-		#power_pressed_dir = Vector2(move_horizontal * -1, move_vertical)
-		#if(power_pressed_dir == Vector2(0,0)):
-			#if(player == 0):
-				#power_pressed_dir = Vector2(1,0)
-			#if(player == 1):
-				#power_pressed_dir = Vector2(-1,0)
+	#if(consecutive_countdown):
+		##print(consecutive_power_tap_frames)
+		#consecutive_power_tap_frames -= 1
+		#if(consecutive_power_tap_frames == 0):
+			##time out, reset taps check
+			#consecutive_power_taps = 0
+			#consecutive_countdown = false
+			#consecutive_power_tap_frames = 20
 				
 	#just released power button while charging
 	if(Input.is_action_just_released(current_input_map[4])):
@@ -171,37 +172,22 @@ func _process(delta: float) -> void:
 		if power_lvl > 0:
 			state = MalletState.PUSHING
 			can_control = false
-			$CooldownTimer.wait_time = .3
+			$CooldownTimer.wait_time = .05 * power_lvl
 			$CooldownTimer.start()
-			current_move_speed = 8 + 3 * power_lvl
+			current_move_speed = 12 + 3 * power_lvl
 			for chev in $Chevrons.get_children():
 				chev.queue_free()
 		$PowerTimer.stop()
 		power_lvl = 0
 	
-	#spin pressed, power and raiseup are not
-	#if(Input.is_action_pressed(current_input_map[6]) &&
-		#!Input.is_action_pressed(current_input_map[4]) && 
-		#!Input.is_action_pressed(current_input_map[7])):
-		#move_vertical = 0.0
-		#move_horizontal = 0.0
+func handle_controls_bullet_time():
 	check_apply_spin()
-	
-	#'ghost mode'
-	#if(Input.is_action_just_pressed(current_input_map[7]) and state == MalletState.DOWN):
-		#state = MalletState.UP
-		#current_move_speed = MOVE_SPEED_UP
-		#lift_up()
-		#
-	#if(Input.is_action_just_released(current_input_map[7]) and state == MalletState.UP):
-		#drop_down()
-		
 
 func start_power_charging():
 	#no more double-tap check
-	consecutive_power_tap_frames = 20
-	consecutive_power_taps = 0
-	consecutive_countdown = false
+	#consecutive_power_tap_frames = 20
+	#consecutive_power_taps = 0
+	#consecutive_countdown = false
 	#start charging up
 	state = MalletState.CHARGING
 	current_move_speed = MOVE_SPEED_POWER
