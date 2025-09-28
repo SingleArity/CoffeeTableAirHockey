@@ -19,6 +19,7 @@ var MAX_POWER_LVL = 5
 
 @export var chevron_scene: PackedScene
 @export var blocker_scene: PackedScene
+@export var ghost_scene: PackedScene
 
 @export var min_x: int
 @export var max_x: int
@@ -41,6 +42,8 @@ var spin_decay = 4
 
 var power_is_held
 var power_held_frames = 0
+var attack_ghost_time = 0.0
+var time_between_attack_ghosts = .1
 
 var consecutive_countdown = false
 var consecutive_power_taps = 0
@@ -85,6 +88,20 @@ func _ready() -> void:
 	dash_angle_degrees = rad_to_deg(power_pressed_dir.angle())
 	#init state
 	state = MalletState.DOWN
+
+func reset_player():
+	spin_power = 0
+	update_spin_ui()
+	release_block_bunt()
+	cancel_attack()
+
+func cancel_attack():
+	state = MalletState.DOWN
+	power_lvl = 0
+	power_held_frames = 0
+	for chev in $Chevrons.get_children():
+		chev.queue_free()
+	$PowerTimer.stop()
 	
 func _input(event: InputEvent) -> void:
 	pass
@@ -99,13 +116,23 @@ func _process(delta: float) -> void:
 	
 	#otherwise no input taken while !can_control
 	if (!can_control or movement_paused or game.dev_console_active):
+		if(control_mode == ControlMode.BULLET_TIME):
+			handle_controls_bullet_time()
+		if(state == MalletState.PUSHING):
+			attack_ghost_time += delta
+			if(attack_ghost_time >= time_between_attack_ghosts):
+				instance_ghost()
+			
 		return
 	
 	if(control_mode == ControlMode.NORMAL_CONTROL):
 		handle_controls_normal()
-	elif(control_mode == ControlMode.BULLET_TIME):
-		handle_controls_bullet_time()
 
+func instance_ghost():
+	var ghost = ghost_scene.instantiate()
+	get_parent().add_child(ghost)
+	ghost.global_position = global_position
+	
 func handle_controls_normal():
 	move_vertical = Input.get_joy_axis(0,JOY_AXIS_LEFT_X)
 	move_horizontal = Input.get_joy_axis(0,JOY_AXIS_LEFT_Y)
@@ -181,8 +208,16 @@ func handle_controls_normal():
 		power_lvl = 0
 	
 func handle_controls_bullet_time():
+	print("bullet_time controls")
 	check_apply_spin()
 
+func set_control_mode(mode):
+	if(mode == "bullet_time"):
+		print("setting to ", mode)
+		control_mode = ControlMode.BULLET_TIME
+	elif(mode == "normal"):
+		control_mode = ControlMode.NORMAL_CONTROL
+		
 func start_power_charging():
 	#no more double-tap check
 	#consecutive_power_tap_frames = 20
@@ -252,14 +287,14 @@ func release_block_orbit():
 	pass
 	
 func check_apply_spin():
-	var left = current_input_map[6]
-	var right = current_input_map[7]
+	var left = current_input_map[1]
+	var right = current_input_map[0]
 	if(player == 1):
-		left = current_input_map[6]
-		right = current_input_map[7]
+		left = current_input_map[0]
+		right = current_input_map[1]
 	if(game.computer_mode):
-		left = current_input_map[6]
-		right = current_input_map[7]
+		left = current_input_map[4]
+		right = current_input_map[3]
 	#right
 	if(Input.is_action_just_pressed(left)):
 		if(spin_power > 0):

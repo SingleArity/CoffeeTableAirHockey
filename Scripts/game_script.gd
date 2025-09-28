@@ -72,6 +72,9 @@ func change_state(new_state):
 			p2.position = Vector2(1750,540)
 			p2.current_move_speed = 0
 			
+			p1.reset_player()
+			p2.reset_player()
+			
 			# Display READY text
 			main_label.text = "READY"
 			main_label.visible = true

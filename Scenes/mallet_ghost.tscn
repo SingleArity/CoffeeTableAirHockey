@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=3 uid="uid://b6br2bqcau8l1"]
+
+[ext_resource type="Texture2D" uid="uid://beon3pd36g8vs" path="res://Sprites/mallet.png" id="1_6l5us"]
+[ext_resource type="Script" path="res://Scripts/mallet_ghost.gd" id="1_n8fxd"]
+
+[sub_resource type="Curve" id="Curve_5fe00"]
+_data = [Vector2(0.02, 0.3), 0.0, 0.0, 0, 0, Vector2(0.935223, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pjsyw"]
+atlas = ExtResource("1_6l5us")
+region = Rect2(0, 0, 107, 108)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_pituw"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pjsyw")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="MalletGhost" type="Node2D"]
+script = ExtResource("1_n8fxd")
+opacity_curve = SubResource("Curve_5fe00")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+modulate = Color(1, 1, 1, 0.254902)
+sprite_frames = SubResource("SpriteFrames_pituw")

@@ -36,12 +36,12 @@ func _on_goal1_body_entered(body: Node) -> void:
 	# Check if the body is the Puck
 	if is_puck(body):
 		# Emit signal to update score for player 1
-		print("Player 1 scored!")
-		SignalBus.emit_score_updated(1)
+		print("Player 2 scored!")
+		SignalBus.emit_score_updated(2)
 
 func _on_goal2_body_entered(body: Node) -> void:
 	# Check if the body is the Puck
 	if is_puck(body):
 		# Emit signal to update score for player 2
-		print("Player 2 scored!")
-		SignalBus.emit_score_updated(2)
+		print("Player 1 scored!")
+		SignalBus.emit_score_updated(1)

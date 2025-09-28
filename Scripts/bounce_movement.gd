@@ -7,12 +7,16 @@ var speed = 200
 
 var movement_paused = false
 @export var has_impact_delay: bool
+@export var impact_circle_curve: Curve
 var impact_delay_cooldown = false
 #flag to be set on collision so we don't check more than once
 var impact_check = false
+var draw_impact_circle = false
+var impact_circle_pos
+var impact_circle_time = 0.0
 
 var bounds = Rect2(Vector2(0, 0), Vector2(800, 600)) # Example edge limits (adjust as needed)
-var rigid_body 
+var rigid_body
 var spin_push
 
 func _ready():
@@ -22,6 +26,13 @@ func _ready():
 	SignalBus.lock_player.connect(_on_lock_player)
 
 
+func _process(delta):
+	#queue_redraw()
+	if(draw_impact_circle):
+		var circ_scale = impact_circle_curve.sample(impact_circle_time)
+		$Circle.scale = Vector2(circ_scale,circ_scale)
+		impact_circle_time += delta
+		
 func _physics_process(delta):
 	if(movement_paused):
 		rigid_body.linear_velocity = Vector2(0.0,0.0)
@@ -53,10 +64,18 @@ func _integrate_forces(state):
 	state.linear_velocity = state.linear_velocity.limit_length(MAX_VELOCITY)
 	print(state.linear_velocity)
 
+#func _draw():
+	#if(draw_impact_circle):
+		#draw_circle(impact_circle_pos, impact_circle_curve.sample(impact_circle_time), Color.WHITE)
+
 func impact_delay(mallet, wait_time):
 	impact_check = true
-	
+	$Circle.global_position = rigid_body.global_position
+	impact_circle_time = 0.0
+	draw_impact_circle = true
+	$Circle.visible = true
 	#mallet
+	mallet.set_control_mode("bullet_time")
 	var mallet_vel = mallet.current_move_speed
 	mallet.current_move_speed = 0
 	mallet.movement_paused = true
@@ -66,12 +85,18 @@ func impact_delay(mallet, wait_time):
 	movement_paused = true
 	print("stored puck vel:", puck_vel)
 	rigid_body.linear_velocity = Vector2(0.0,0.0)
+	rigid_body.set_freeze_enabled(true)
 	print("hi")
 	await get_tree().create_timer(wait_time).timeout
+	$Circle.visible = false
+	draw_impact_circle = false
+	impact_circle_time = 0.0
 	#reset puck
 	movement_paused = false
+	rigid_body.set_freeze_enabled(false)
 	rigid_body.linear_velocity = puck_vel
 	#reset mallet
+	mallet.set_control_mode("normal")
 	mallet.pause_cooldown_timer(false)
 	mallet.movement_paused = false
 	mallet.current_move_speed = mallet_vel
