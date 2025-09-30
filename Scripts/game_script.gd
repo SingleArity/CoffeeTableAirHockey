@@ -25,6 +25,8 @@ var player2_score = 0
 @onready var player1_score_label = $Display/ScoreP1
 @onready var player2_score_label = $Display/ScoreP2
 
+var title_velocity = Vector2(200,200)
+
 @onready var p1 = $Mallet_P1
 @onready var p2 = $Mallet_P2
 
@@ -34,8 +36,8 @@ var dev_console_active = false
 func _ready():
 	if(goals_disabled):
 		set_goals_enabled(false)
-	# Initialize the game in READY state
-	change_state(GameState.READY)
+	# Initialize the game in TITLE state
+	change_state(GameState.TITLE)
 	
 	# Connect to the signal that triggers the start of play
 	SignalBus.start_play.connect(_on_start_play)
@@ -55,14 +57,27 @@ func _process(delta: float) -> void:
 			$UI/DevConsole.visible = false
 			$UI/DevConsole.set_active(false)
 			dev_console_active = false
-
+	
+	match current_state:
+		GameState.TITLE:
+			var collision_info = $TitleRigidBody.move_and_collide(title_velocity * delta)
+			if collision_info:
+				title_velocity = title_velocity.bounce(collision_info.get_normal())
+			if(Input.is_action_just_pressed("ready_p1")):
+				change_state(GameState.READY)
+				$TitleRigidBody.visible = false
+			
+				
 func change_state(new_state):
 	current_state = new_state
 	
 	player1_score_label.text = str(player1_score)
 	player2_score_label.text = str(player2_score)
 	match current_state:
+		GameState.TITLE:
+			pass
 		GameState.READY:
+			
 			# Lock player input
 			lock_player_input()
 			

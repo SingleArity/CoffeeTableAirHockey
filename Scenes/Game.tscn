@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3 uid="uid://o2jdyc81i6pm"]
+[gd_scene load_steps=52 format=3 uid="uid://o2jdyc81i6pm"]
 
 [ext_resource type="Texture2D" uid="uid://bh5208qy3hlkn" path="res://Sprites/Table.png" id="1_a2wf4"]
 [ext_resource type="Script" path="res://Scripts/bounce_movement.gd" id="1_qv72c"]
@@ -21,6 +21,7 @@
 [ext_resource type="Texture2D" uid="uid://bk18x4ec62ah" path="res://Sprites/Spin_Red_1.png" id="16_kghlh"]
 [ext_resource type="Texture2D" uid="uid://qsvhfgswkew" path="res://Sprites/Spin_Red_2.png" id="17_ptckb"]
 [ext_resource type="Texture2D" uid="uid://4q7qsui5etrq" path="res://Sprites/Spin_Red_3.png" id="18_s3s8k"]
+[ext_resource type="FontFile" uid="uid://hjoyssvqg13h" path="res://Fonts/dream_mma/Dream MMA.ttf" id="22_c4kmr"]
 
 [sub_resource type="Curve" id="Curve_vtm1p"]
 max_value = 3.0
@@ -62,6 +63,9 @@ size = Vector2(130, 559)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yri5s"]
 size = Vector2(130, 616)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s3u7h"]
+size = Vector2(288, 742)
 
 [sub_resource type="LabelSettings" id="LabelSettings_0wjtg"]
 font_size = 100
@@ -200,8 +204,16 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_xndx3"]
 radius = 50.0
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_xjtop"]
+friction = 0.0
+bounce = 1.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3n7sf"]
+size = Vector2(576, 368)
+
 [node name="Game" type="Node2D"]
 script = ExtResource("1_r0ebw")
+computer_mode = true
 
 [node name="Puck" type="Node2D" parent="." groups=["puck"]]
 z_index = 1
@@ -237,9 +249,10 @@ scale = Vector2(3, 3)
 script = ExtResource("4_0umfb")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Table"]
+collision_layer = 9
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(955, -37.875)
+position = Vector2(955, -97.875)
 shape = SubResource("RectangleShape2D_tuca0")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="Table/StaticBody2D"]
@@ -248,7 +261,7 @@ sprite_frames = SubResource("SpriteFrames_dxil8")
 centered = false
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBody2D"]
-position = Vector2(941.5, 1112.25)
+position = Vector2(941.5, 1180.25)
 shape = SubResource("RectangleShape2D_tuca0")
 
 [node name="RightWall" type="CollisionShape2D" parent="Table/StaticBody2D"]
@@ -280,6 +293,17 @@ position = Vector2(1900, 530)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Table/Goal2"]
 position = Vector2(98, -6)
 shape = SubResource("RectangleShape2D_yri5s")
+
+[node name="StaticBodyTitle" type="StaticBody2D" parent="Table"]
+collision_layer = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Table/StaticBodyTitle"]
+position = Vector2(-112, 524)
+shape = SubResource("RectangleShape2D_s3u7h")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Table/StaticBodyTitle"]
+position = Vector2(2029, 524)
+shape = SubResource("RectangleShape2D_s3u7h")
 
 [node name="Display" type="Label" parent="."]
 offset_left = 351.0
@@ -321,6 +345,7 @@ chevron_scene = ExtResource("7_f6tdj")
 blocker_scene = ExtResource("8_k2qgw")
 ghost_scene = ExtResource("10_u5oml")
 max_x = 960
+max_y = 1080
 block_mode = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Mallet_P1"]
@@ -359,6 +384,7 @@ blocker_scene = ExtResource("8_k2qgw")
 ghost_scene = ExtResource("10_u5oml")
 min_x = 960
 max_x = 1920
+max_y = 1080
 player = 1
 block_mode = 1
 
@@ -394,6 +420,14 @@ anchors_preset = 0
 offset_right = 1920.0
 offset_bottom = 1080.0
 
+[node name="PlayersReady" type="Node" parent="UI"]
+
+[node name="RichTextLabel" type="RichTextLabel" parent="UI/PlayersReady"]
+offset_right = 40.0
+offset_bottom = 40.0
+bbcode_enabled = true
+text = "Press Start to Ready Up!"
+
 [node name="DevConsole" type="VBoxContainer" parent="UI"]
 visible = false
 layout_mode = 1
@@ -414,6 +448,34 @@ custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 max_length = 100
 caret_blink = true
+
+[node name="TitleRigidBody" type="RigidBody2D" parent="."]
+position = Vector2(955, 448)
+collision_layer = 16
+collision_mask = 8
+physics_material_override = SubResource("PhysicsMaterial_xjtop")
+gravity_scale = 0.0
+lock_rotation = true
+linear_damp = -1.0
+
+[node name="Title" type="RichTextLabel" parent="TitleRigidBody"]
+z_index = 4
+offset_left = -451.0
+offset_top = -168.0
+offset_right = 449.0
+offset_bottom = 216.0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 16
+theme_override_constants/shadow_offset_x = 8
+theme_override_fonts/normal_font = ExtResource("22_c4kmr")
+theme_override_font_sizes/normal_font_size = 128
+bbcode_enabled = true
+text = "[center]what the puck"
+fit_content = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TitleRigidBody"]
+position = Vector2(5, 16)
+shape = SubResource("RectangleShape2D_3n7sf")
 
 [connection signal="timeout" from="Puck/SpinDecay" to="Puck" method="_on_spin_decay_timeout"]
 [connection signal="timeout" from="Mallet_P1/PowerTimer" to="Mallet_P1" method="_on_power_timer_timeout"]

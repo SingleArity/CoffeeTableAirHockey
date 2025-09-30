@@ -14,6 +14,13 @@ var impact_check = false
 var draw_impact_circle = false
 var impact_circle_pos
 var impact_circle_time = 0.0
+var impact_power_dict = {
+	1: .4,
+	2: .5,
+	3: .6,
+	4: .8,
+	5: 1.0
+}
 
 var bounds = Rect2(Vector2(0, 0), Vector2(800, 600)) # Example edge limits (adjust as needed)
 var rigid_body
@@ -45,8 +52,8 @@ func _physics_process(delta):
 		var coll_obj = collision_info.get_collider()
 		#hit a player mallet
 		if(coll_obj.is_in_group("mallet")):
-			if(has_impact_delay && coll_obj.current_move_speed >= 15 && !impact_check):
-				impact_delay(coll_obj, 1.0)
+			if(has_impact_delay && coll_obj.power_lvl > 0 && !impact_check):
+				impact_delay(coll_obj, 1.0, coll_obj.power_lvl)
 			if(coll_obj.check_bunt()):
 				velocity *= .4
 			apply_spin(coll_obj.spin_power)
@@ -68,7 +75,7 @@ func _integrate_forces(state):
 	#if(draw_impact_circle):
 		#draw_circle(impact_circle_pos, impact_circle_curve.sample(impact_circle_time), Color.WHITE)
 
-func impact_delay(mallet, wait_time):
+func impact_delay(mallet, wait_time, pow_lvl):
 	impact_check = true
 	$Circle.global_position = rigid_body.global_position
 	impact_circle_time = 0.0
@@ -100,9 +107,10 @@ func impact_delay(mallet, wait_time):
 	mallet.pause_cooldown_timer(false)
 	mallet.movement_paused = false
 	mallet.current_move_speed = mallet_vel
-	
-	#no more impact for a small time
-	#impact_delay_cooldown = true
+	# fudging our escape velocity, manually slowing it down based on
+	# what power level the impact was at
+	velocity *= impact_power_dict[pow_lvl]
+	# no more impact for a small time
 	await get_tree().create_timer(.5).timeout
 	impact_check = false
 	

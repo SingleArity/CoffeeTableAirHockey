@@ -10,6 +10,7 @@ enum ControlMode {
 	NORMAL_CONTROL,
 	BULLET_TIME
 }
+
 var control_mode = ControlMode.NORMAL_CONTROL
 
 var MOVE_SPEED_NORMAL = 8
@@ -23,6 +24,8 @@ var MAX_POWER_LVL = 5
 
 @export var min_x: int
 @export var max_x: int
+@export var min_y: int
+@export var max_y: int
 
 @export var player: int
 
@@ -91,6 +94,7 @@ func _ready() -> void:
 
 func reset_player():
 	spin_power = 0
+	$SpinDischarge.stop()
 	update_spin_ui()
 	release_block_bunt()
 	cancel_attack()
@@ -142,7 +146,7 @@ func handle_controls_normal():
 	
 	#holding power button
 	power_is_held = Input.is_action_pressed(current_input_map[4])
-	if(power_is_held):
+	if(power_is_held && state == MalletState.DOWN):
 		power_held_frames += 1
 		if(power_held_frames == 1):
 			start_power_charging()
@@ -205,10 +209,8 @@ func handle_controls_normal():
 			for chev in $Chevrons.get_children():
 				chev.queue_free()
 		$PowerTimer.stop()
-		power_lvl = 0
 	
 func handle_controls_bullet_time():
-	print("bullet_time controls")
 	check_apply_spin()
 
 func set_control_mode(mode):
@@ -293,8 +295,8 @@ func check_apply_spin():
 		left = current_input_map[0]
 		right = current_input_map[1]
 	if(game.computer_mode):
-		left = current_input_map[4]
-		right = current_input_map[3]
+		left = current_input_map[3]
+		right = current_input_map[2]
 	#right
 	if(Input.is_action_just_pressed(left)):
 		if(spin_power > 0):
@@ -326,6 +328,7 @@ func check_apply_spin():
 		update_spin_ui()
 		#cap spin_power
 		spin_power = min(spin_power,MAX_SPIN_POWER)
+		print("spin timer start")
 		$SpinDischarge.start(1.0)
 
 func adjust_dash_direction(angle):
@@ -396,6 +399,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			#regular movement
 			global_position += Vector2(move_horizontal * -1, move_vertical) * current_move_speed
+			
+	reset_to_bounds(global_position)
 		
 func outside_move_boundaries(move_amount):
 	if((global_position + move_amount).x > max_x ||
@@ -403,6 +408,16 @@ func outside_move_boundaries(move_amount):
 	(global_position + move_amount).y < 0 ||
 	(global_position + move_amount).y > 1080):
 		return true
+
+func reset_to_bounds(global_pos):
+	if(global_pos.x > max_x):
+		global_position.x = max_x
+	elif(global_pos.x < min_x):
+		global_position.x = min_x
+	elif(global_pos.y > max_y):
+		global_position.y = max_y
+	elif(global_pos.y < min_y):
+		global_position.y = min_y
 		
 func _on_power_timer_timeout() -> void:
 	if(power_lvl < MAX_POWER_LVL):
@@ -424,12 +439,15 @@ func _on_cooldown_timer_timeout() -> void:
 	$CooldownTimer.stop()
 	if(state == MalletState.UP):
 		drop_down()
+	if(state == MalletState.PUSHING):
+		power_lvl = 0
 	state = MalletState.DOWN
 	
 func _on_lock_player_input(locked: bool) -> void:
 	can_control = !locked
 
 func _on_spin_discharge_timeout() -> void:
+	print("spin discharge")
 	#less spin each timeout
 	if(spin_power > 0):
 		spin_power -= spin_decay
